@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Bit.Core.Models.Data;
 using Bit.Core.Models.Table.Provider;
@@ -102,7 +103,7 @@ namespace Bit.Core.Repositories.SqlServer
         }
 
         public async Task<ICollection<ProviderUserProviderDetails>> GetManyDetailsByUserAsync(Guid userId,
-            ProviderUserStatusType? status = null)
+            AssociationStatusType? status = null)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {
@@ -116,7 +117,7 @@ namespace Bit.Core.Repositories.SqlServer
         }
 
         public async Task<IEnumerable<ProviderUserOrganizationDetails>> GetManyOrganizationDetailsByUserAsync(Guid userId,
-            ProviderUserStatusType? status = null)
+            AssociationStatusType? status = null)
         {
             using (var connection = new SqlConnection(ConnectionString))
             {

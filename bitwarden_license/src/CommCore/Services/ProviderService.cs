@@ -68,7 +68,7 @@ namespace Bit.CommCore.Services
                 ProviderId = provider.Id,
                 UserId = owner.Id,
                 Type = ProviderUserType.ProviderAdmin,
-                Status = ProviderUserStatusType.Confirmed,
+                Status = AssociationStatusType.Confirmed,
             };
             await _providerUserRepository.CreateAsync(providerUser);
             await SendProviderSetupInviteEmailAsync(provider, owner.Email);
@@ -118,39 +118,51 @@ namespace Bit.CommCore.Services
             await _providerRepository.ReplaceAsync(provider);
         }
 
-        public async Task<List<ProviderUser>> InviteUserAsync(Guid providerId, ProviderUserInvite invite)
+        public async Task<List<ProviderUser>> InviteUsersAsync(IEnumerable<ProviderUserInvite> invites)
         {
-            var provider = await _providerRepository.GetByIdAsync(providerId);
-            if (provider == null || invite?.Emails == null || !invite.Emails.Any())
+            if (!invites.Any())
+            {
+                throw new BadRequestException("No invite supplied.");
+            }
+
+            var provider = invites.GroupBy(x => x.GroupIdentifier).Count() != 1 ?
+                throw new NotImplementedException("Bulk inviting to multiple providers at once is not supported.") :
+                await _providerRepository.GetByIdAsync(invites.Select(x => x.GroupIdentifier).FirstOrDefault());
+
+            if (provider == null)
             {
                 throw new NotFoundException();
             }
 
             var providerUsers = new List<ProviderUser>();
-            foreach (var email in invite.Emails)
+            foreach (var invite in invites)
             {
-                // Make sure user is not already invited
                 var existingProviderUserCount =
-                    await _providerUserRepository.GetCountByProviderAsync(providerId, email, false);
+                    await _providerUserRepository.GetCountByProviderAsync(invite.GroupIdentifier, invite.InviteeIdentifier, false);
                 if (existingProviderUserCount > 0)
                 {
                     continue;
                 }
 
-                var providerUser = new ProviderUser
+                var providerUser = await _providerUserRepository.CreateAsync(new ProviderUser 
                 {
-                    ProviderId = providerId,
+                    ProviderId = provider.Id,
                     UserId = null,
-                    Email = email.ToLowerInvariant(),
+                    Email = invite.InviteeIdentifier.ToLowerInvariant(),
                     Key = null,
-                    Type = invite.Type,
-                    Status = ProviderUserStatusType.Invited,
+                    Type = invite.InviteeRoleType,
+                    Status = AssociationStatusType.Invited,
                     CreationDate = DateTime.UtcNow,
                     RevisionDate = DateTime.UtcNow,
-                };
+                });
 
-                await _providerUserRepository.CreateAsync(providerUser);
+                var validatedAssociation = ValidateAssociation(providerUser, provider);
+                if (validatedAssociation.token == null)
+                {
+                    continue;
+                }
 
+                await _mailService.SendProviderInviteEmailAsync(provider, validatedAssociation.association.value, validatedAssociation.token);
                 await SendInviteAsync(providerUser, provider);
                 providerUsers.Add(providerUser);
             }
@@ -160,21 +172,31 @@ namespace Bit.CommCore.Services
             return providerUsers;
         }
 
-        public async Task<List<Tuple<ProviderUser, string>>> ResendInvitesAsync(Guid providerId, IEnumerable<Guid> providerUsersId)
+        public async Task<List<Tuple<ProviderUser, string>>> ResendInvitesAsync(IEnumerable<ProviderUserInviteResend> invites)
         {
-            var providerUsers = await _providerUserRepository.GetManyAsync(providerUsersId);
-            var provider = await _providerRepository.GetByIdAsync(providerId);
+            if (!invites.Any())
+            {
+                throw new BadRequestException("No invites supplied.");
+            }
+
+            var providerUsers = await _providerUserRepository.GetManyAsync(invites.Select(x => x.InviteeIdentifier));
+            var providers = invites.GroupBy(x => x.GroupIdentifier).Count() > 1 ? 
+                throw new NotImplementedException() :
+                new [] { await _providerRepository.GetByIdAsync(invites.FirstOrDefault().GroupIdentifier) };
 
             var result = new List<Tuple<ProviderUser, string>>();
-            foreach (var providerUser in providerUsers)
+            foreach (var invite in invites)
             {
-                if (providerUser.Status != ProviderUserStatusType.Invited || providerUser.ProviderId != providerId)
+                var providerUser = providerUsers.FirstOrDefault(pu => pu.UserId.Equals(invite.InviteeIdentifier));
+                if (providerUser.Equals(null) || 
+                    !providerUser.Status.Equals(AssociationStatusType.Invited) ||
+                    !providerUser.ProviderId.Equals(invite.GroupIdentifier))
                 {
                     result.Add(Tuple.Create(providerUser, "User invalid."));
                     continue;
                 }
 
-                await SendInviteAsync(providerUser, provider);
+                await SendInviteAsync(providerUser, providers.FirstOrDefault(p => p.Id.Equals(invite.GroupIdentifier)));
                 result.Add(Tuple.Create(providerUser, ""));
             }
 
@@ -189,7 +211,7 @@ namespace Bit.CommCore.Services
                 throw new BadRequestException("User invalid.");
             }
             
-            if (providerUser.Status != ProviderUserStatusType.Invited)
+            if (providerUser.Status != AssociationStatusType.Invited)
             {
                 throw new BadRequestException("Already accepted.");
             }
@@ -206,7 +228,7 @@ namespace Bit.CommCore.Services
                 throw new BadRequestException("User email does not match invite.");
             }
             
-            providerUser.Status = ProviderUserStatusType.Accepted;
+            providerUser.Status = AssociationStatusType.Accepted;
             providerUser.UserId = user.Id;
             providerUser.Email = null;
 
@@ -247,12 +269,12 @@ namespace Bit.CommCore.Services
                 var providerUser = keyedFilteredUsers[user.Id];
                 try
                 {
-                    if (providerUser.Status != ProviderUserStatusType.Accepted || providerUser.ProviderId != providerId)
+                    if (providerUser.Status != AssociationStatusType.Accepted || providerUser.ProviderId != providerId)
                     {
                         throw new BadRequestException("Invalid user.");
                     }
                     
-                    providerUser.Status = ProviderUserStatusType.Confirmed;
+                    providerUser.Status = AssociationStatusType.Confirmed;
                     providerUser.Key = keys[providerUser.Id];
                     providerUser.Email = null;
 
@@ -404,15 +426,23 @@ namespace Bit.CommCore.Services
             await _eventService.LogProviderOrganizationEventAsync(providerOrganization, EventType.ProviderOrganization_Removed);
         }
 
-        public async Task ResendProviderSetupInviteEmailAsync(Guid providerId, Guid userId)
+        public async Task ResendProviderSetupInvitesAsync(IEnumerable<ProviderSetupInviteResend> invites)
         {
-            var provider = await _providerRepository.GetByIdAsync(providerId);
-            var owner = await _userRepository.GetByIdAsync(userId);
-            if (owner == null)
+            if (!invites.Any())
             {
-                throw new BadRequestException("Invalid owner.");
+                return;
             }
-            await SendProviderSetupInviteEmailAsync(provider, owner.Email);
+
+            foreach (var invite in invites)
+            {
+                var provider = await _providerRepository.GetByIdAsync(invite.GroupIdentifier);
+                var owner = await _userRepository.GetByIdAsync(invite.InviteeIdentifier);
+                if (owner == null)
+                {
+                    throw new BadRequestException("Invalid owner.");
+                }
+                await SendProviderSetupInviteEmailAsync(provider, owner.Email);
+            }
         }
 
         private async Task SendProviderSetupInviteEmailAsync(Provider provider, string ownerEmail)
@@ -426,16 +456,38 @@ namespace Bit.CommCore.Services
             var nowMillis = CoreHelpers.ToEpocMilliseconds(DateTime.UtcNow);
             var token = _dataProtector.Protect(
                 $"ProviderUserInvite {providerUser.Id} {providerUser.Email} {nowMillis}");
-            await _mailService.SendProviderInviteEmailAsync(provider.Name, providerUser, token, providerUser.Email);
+            await _mailService.SendProviderInviteEmailAsync(provider, providerUser, token);
         }
 
         private async Task<bool> HasConfirmedProviderAdminExceptAsync(Guid providerId, IEnumerable<Guid> providerUserIds)
         {
             var providerAdmins = await _providerUserRepository.GetManyByProviderAsync(providerId,
                 ProviderUserType.ProviderAdmin);
-            var confirmedOwners = providerAdmins.Where(o => o.Status == ProviderUserStatusType.Confirmed);
+            var confirmedOwners = providerAdmins.Where(o => o.Status == AssociationStatusType.Confirmed);
             var confirmedOwnersIds = confirmedOwners.Select(u => u.Id);
             return confirmedOwnersIds.Except(providerUserIds).Any();
+        }
+
+        private ((T1 value, string message) association, string token) ValidateAssociation<T1, T2>(T1 association, T2 consortium)
+            where T1: IConsortiumAssociation
+            where T2: IConsortium
+        {
+            if (association.Equals(null) || consortium.Equals(null))
+            {
+                throw new BadRequestException("Invalid invite data provided.");
+            }
+
+            if (!association.Status.Equals(AssociationStatusType.Invited))
+            {
+                return ((association, "User invalid."), null);
+            }
+
+            var options = new object[] 
+            {
+                consortium.Id,
+                association.Email,
+            };
+            return ((association, string.Empty), _mailService.GenerateProtectionToken("AssociationValidation", options));
         }
     }
 }

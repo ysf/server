@@ -67,10 +67,10 @@ namespace Bit.Api.Controllers
             var organizationUserDetails = await _organizationUserRepository.GetManyDetailsByUserAsync(user.Id,
                 OrganizationUserStatusType.Confirmed);
             var providerUserDetails = await _providerUserRepository.GetManyDetailsByUserAsync(user.Id,
-                ProviderUserStatusType.Confirmed);
+                AssociationStatusType.Confirmed);
             var providerUserOrganizationDetails =
                 await _providerUserRepository.GetManyOrganizationDetailsByUserAsync(user.Id,
-                    ProviderUserStatusType.Confirmed);
+                    AssociationStatusType.Confirmed);
             var hasEnabledOrgs = organizationUserDetails.Any(o => o.Enabled);
             var folders = await _folderRepository.GetManyByUserIdAsync(user.Id);
             var ciphers = await _cipherRepository.GetManyByUserIdAsync(user.Id, hasEnabledOrgs);

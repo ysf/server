@@ -253,7 +253,7 @@ namespace Bit.Core.Repositories.EntityFramework
                 var query = from pu in dbContext.ProviderUsers
                     join u in dbContext.Users
                         on pu.UserId equals u.Id
-                    where pu.Status.Equals(ProviderUserStatusType.Confirmed) &&
+                    where pu.Status.Equals(AssociationStatusType.Confirmed) &&
                         providerUserIds.Contains(pu.Id)
                     select new { pu, u };
                 var users = query.Select(x => x.u);

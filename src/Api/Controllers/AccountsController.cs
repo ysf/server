@@ -16,9 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Bit.Core.Enums.Provider;
 
 namespace Bit.Api.Controllers
 {
@@ -373,10 +371,10 @@ namespace Bit.Api.Controllers
             var organizationUserDetails = await _organizationUserRepository.GetManyDetailsByUserAsync(user.Id,
                 OrganizationUserStatusType.Confirmed);
             var providerUserDetails = await _providerUserRepository.GetManyDetailsByUserAsync(user.Id,
-                ProviderUserStatusType.Confirmed);
+                AssociationStatusType.Confirmed);
             var providerUserOrganizationDetails =
                 await _providerUserRepository.GetManyOrganizationDetailsByUserAsync(user.Id,
-                    ProviderUserStatusType.Confirmed);
+                    AssociationStatusType.Confirmed);
             var response = new ProfileResponseModel(user, organizationUserDetails, providerUserDetails,
                 providerUserOrganizationDetails, await _userService.TwoFactorIsEnabledAsync(user));
             return response;

@@ -1,5 +1,6 @@
 ﻿using System;
 using Bit.Core.Models.Data;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Bit.Core.Models.Table.Provider;
 using Bit.Core.Utilities;
@@ -41,7 +42,7 @@ namespace Bit.Core.Models.Api
         public string Id { get; set; }
         public string UserId { get; set; }
         public ProviderUserType Type { get; set; }
-        public ProviderUserStatusType Status { get; set; }
+        public AssociationStatusType Status { get; set; }
         public Permissions Permissions { get; set; }
     }
 

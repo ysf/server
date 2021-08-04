@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bit.Admin.Models;
+using Bit.Core.Models.Business.Provider;
 using Bit.Core.Models.Table.Provider;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
@@ -21,15 +22,18 @@ namespace Bit.Admin.Controllers
         private readonly GlobalSettings _globalSettings;
         private readonly IApplicationCacheService _applicationCacheService;
         private readonly IProviderService _providerService;
+        private readonly IUserService _userService;
 
         public ProvidersController(IProviderRepository providerRepository, IProviderUserRepository providerUserRepository,
-            IProviderService providerService, GlobalSettings globalSettings, IApplicationCacheService applicationCacheService)
+            IProviderService providerService, GlobalSettings globalSettings, IApplicationCacheService applicationCacheService,
+            IUserService userService)
         {
             _providerRepository = providerRepository;
             _providerUserRepository = providerUserRepository;
             _providerService = providerService;
             _globalSettings = globalSettings;
             _applicationCacheService = applicationCacheService;
+            _userService = userService;
         }
         
         public async Task<IActionResult> Index(string name = null, string userEmail = null, int page = 1, int count = 25)
@@ -136,7 +140,8 @@ namespace Bit.Admin.Controllers
 
         public async Task<IActionResult> ResendInvite(Guid userId, Guid providerId)
         {
-            await _providerService.ResendProviderSetupInviteEmailAsync(providerId, userId);
+            await _providerService.ResendProviderSetupInvitesAsync(
+                new [] { new ProviderSetupInviteResend(providerId, User.Identity.Name, userId) });
             TempData["InviteResentTo"] = userId;
             return RedirectToAction("Edit", new { id = providerId });
         }

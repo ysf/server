@@ -10,9 +10,7 @@ using System.Security.Claims;
 using Bit.Core.Enums.Provider;
 using Bit.Core.Utilities;
 using Bit.Core.Models.Data;
-using Bit.Core.Models.Table.Provider;
 using Bit.Core.Settings;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Bit.Core.Context
 {
@@ -400,7 +398,7 @@ namespace Bit.Core.Context
             if (Providers == null)
             {
                 var userProviders = await providerUserRepository.GetManyByUserAsync(userId);
-                Providers = userProviders.Where(ou => ou.Status == ProviderUserStatusType.Confirmed)
+                Providers = userProviders.Where(ou => ou.Status == AssociationStatusType.Confirmed)
                     .Select(ou => new CurrentContentProvider(ou)).ToList();
             }
             return Providers;
@@ -444,7 +442,7 @@ namespace Bit.Core.Context
         {
             if (_providerUserOrganizations == null)
             {
-                _providerUserOrganizations = await _providerUserRepository.GetManyOrganizationDetailsByUserAsync(UserId.Value, ProviderUserStatusType.Confirmed);
+                _providerUserOrganizations = await _providerUserRepository.GetManyOrganizationDetailsByUserAsync(UserId.Value, AssociationStatusType.Confirmed);
             }
 
             return _providerUserOrganizations;

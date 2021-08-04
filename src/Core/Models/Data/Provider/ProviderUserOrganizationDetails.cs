@@ -1,4 +1,5 @@
 ﻿using System;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 
 namespace Bit.Core.Models.Data
@@ -24,7 +25,7 @@ namespace Bit.Core.Models.Data
         public short? MaxCollections { get; set; }
         public short? MaxStorageGb { get; set; }
         public string Key { get; set; }
-        public ProviderUserStatusType Status { get; set; }
+        public AssociationStatusType Status { get; set; }
         public ProviderUserType Type { get; set; }
         public bool Enabled { get; set; }
         public string Identifier { get; set; }

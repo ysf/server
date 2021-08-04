@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Bit.Core.Models.Data;
 
@@ -8,8 +9,8 @@ namespace Bit.Core.Repositories.EntityFramework.Queries
     public class ProviderUserProviderDetailsReadByUserIdStatusQuery : IQuery<ProviderUserProviderDetails>
     {
         private readonly Guid _userId;
-        private readonly ProviderUserStatusType? _status;
-        public ProviderUserProviderDetailsReadByUserIdStatusQuery(Guid userId, ProviderUserStatusType? status)
+        private readonly AssociationStatusType? _status;
+        public ProviderUserProviderDetailsReadByUserIdStatusQuery(Guid userId, AssociationStatusType? status)
         {
             _userId = userId;
             _status = status;

@@ -1,16 +1,17 @@
 ﻿using System.Reflection;
 using AutoFixture;
 using AutoFixture.Xunit2;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 
 namespace Bit.CommCore.Test.AutoFixture.ProviderUserFixtures
 {
     internal class ProviderUser : ICustomization
     {
-        public ProviderUserStatusType Status { get; set; }
+        public AssociationStatusType Status { get; set; }
         public ProviderUserType Type { get; set; }
 
-        public ProviderUser(ProviderUserStatusType status, ProviderUserType type)
+        public ProviderUser(AssociationStatusType status, ProviderUserType type)
         {
             Status = status;
             Type = type;
@@ -26,11 +27,11 @@ namespace Bit.CommCore.Test.AutoFixture.ProviderUserFixtures
 
     public class ProviderUserAttribute : CustomizeAttribute
     {
-        private readonly ProviderUserStatusType _status;
+        private readonly AssociationStatusType _status;
         private readonly ProviderUserType _type;
 
         public ProviderUserAttribute(
-            ProviderUserStatusType status = ProviderUserStatusType.Confirmed,
+            AssociationStatusType status = AssociationStatusType.Confirmed,
             ProviderUserType type = ProviderUserType.ProviderAdmin)
         {
             _status = status;

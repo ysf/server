@@ -5,6 +5,7 @@ using System;
 using Bit.Core.Models.Mail;
 using Bit.Core.Models.Table.Provider;
 using Bit.Core.Models.Business;
+using Bit.Core.Models.Business.Provider;
 
 namespace Bit.Core.Services
 {
@@ -43,9 +44,10 @@ namespace Bit.Core.Services
         Task SendEnqueuedMailMessageAsync(IMailQueueMessage queueMessage);
         Task SendAdminResetPasswordEmailAsync(string email, string userName, string orgName);
         Task SendProviderSetupInviteEmailAsync(Provider provider, string token, string email);
-        Task SendProviderInviteEmailAsync(string providerName, ProviderUser providerUser, string token, string email);
+        Task SendProviderInviteEmailAsync(Provider provider, ProviderUser providerUser, string token);
         Task SendProviderConfirmedEmailAsync(string providerName, string email);
         Task SendProviderUserRemoved(string providerName, string email);
         Task SendUpdatedTempPasswordEmailAsync(string email, string userName);
+        string GenerateProtectionToken(string name, object[] options); 
     }
 }

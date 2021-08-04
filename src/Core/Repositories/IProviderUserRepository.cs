@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Bit.Core.Models.Data;
 using Bit.Core.Models.Table.Provider;
@@ -16,8 +17,8 @@ namespace Bit.Core.Repositories
         Task<ICollection<ProviderUser>> GetManyByProviderAsync(Guid providerId, ProviderUserType? type = null);
         Task<ICollection<ProviderUserUserDetails>> GetManyDetailsByProviderAsync(Guid providerId);
         Task<ICollection<ProviderUserProviderDetails>> GetManyDetailsByUserAsync(Guid userId,
-            ProviderUserStatusType? status = null);
-        Task<IEnumerable<ProviderUserOrganizationDetails>> GetManyOrganizationDetailsByUserAsync(Guid userId, ProviderUserStatusType? status = null);
+            AssociationStatusType? status = null);
+        Task<IEnumerable<ProviderUserOrganizationDetails>> GetManyOrganizationDetailsByUserAsync(Guid userId, AssociationStatusType? status = null);
         Task DeleteManyAsync(IEnumerable<Guid> userIds);
         Task<IEnumerable<ProviderUserPublicKey>> GetManyPublicKeysByProviderUserAsync(Guid providerId, IEnumerable<Guid> Ids);
     }

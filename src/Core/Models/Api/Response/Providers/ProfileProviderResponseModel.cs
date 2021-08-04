@@ -1,4 +1,5 @@
-﻿using Bit.Core.Enums.Provider;
+﻿using Bit.Core.Enums;
+using Bit.Core.Enums.Provider;
 using Bit.Core.Models.Data;
 using Bit.Core.Utilities;
 
@@ -23,7 +24,7 @@ namespace Bit.Core.Models.Api
         public string Id { get; set; }
         public string Name { get; set; }
         public string Key { get; set; }
-        public ProviderUserStatusType Status { get; set; }
+        public AssociationStatusType Status { get; set; }
         public ProviderUserType Type { get; set; }
         public bool Enabled { get; set; }
         public Permissions Permissions { get; set; }

@@ -1,10 +1,8 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
-using Core.Models.Data;
-using Bit.Core.Utilities;
 using Bit.Core.Models.Data;
-using Bit.Core.Enums.Provider;
+using Bit.Core.Enums;
 
 namespace Bit.Core.Repositories.EntityFramework.Queries
 {
@@ -25,7 +23,7 @@ namespace Bit.Core.Repositories.EntityFramework.Queries
                 join u in dbContext.Users
                     on pu.UserId equals u.Id
                 where _ids.Contains(pu.Id) &&
-                    pu.Status == ProviderUserStatusType.Accepted &&
+                    pu.Status == AssociationStatusType.Accepted &&
                     pu.ProviderId == _providerId
                 select new { pu, u };
             return query.Select(x => new ProviderUserPublicKey

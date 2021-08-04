@@ -1,10 +1,11 @@
 ﻿using System;
 using Bit.Core.Enums.Provider;
+using Bit.Core.Models.Business.Provider;
 using Bit.Core.Utilities;
 
 namespace Bit.Core.Models.Table.Provider
 {
-    public class Provider : ITableObject<Guid>
+    public class Provider : ITableObject<Guid>, IConsortium
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

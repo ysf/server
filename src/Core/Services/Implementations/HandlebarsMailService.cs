@@ -13,6 +13,11 @@ using Bit.Core.Models.Mail.Provider;
 using Bit.Core.Models.Table.Provider;
 using HandlebarsDotNet;
 using Bit.Core.Models.Business;
+using Bit.Core.Exceptions;
+using Bit.Core.Enums.Provider;
+using Microsoft.AspNetCore.DataProtection;
+using Bit.Core.Models.Business.Provider;
+using Bit.Core.Enums;
 
 namespace Bit.Core.Services
 {
@@ -27,15 +32,18 @@ namespace Bit.Core.Services
             new Dictionary<string, Func<object, string>>();
 
         private bool _registeredHelpersAndPartials = false;
+        private readonly IDataProtector _dataProtector;
 
         public HandlebarsMailService(
             GlobalSettings globalSettings,
             IMailDeliveryService mailDeliveryService,
-            IMailEnqueuingService mailEnqueuingService)
+            IMailEnqueuingService mailEnqueuingService,
+            IDataProtector dataProtector)
         {
             _globalSettings = globalSettings;
             _mailDeliveryService = mailDeliveryService;
             _mailEnqueuingService = mailEnqueuingService;
+            _dataProtector = dataProtector;
         }
 
         public async Task SendVerifyEmailEmailAsync(string email, Guid userId, string token)
@@ -668,16 +676,16 @@ namespace Bit.Core.Services
             await _mailDeliveryService.SendEmailAsync(message);
         }
 
-        public async Task SendProviderInviteEmailAsync(string providerName, ProviderUser providerUser, string token, string email)
+        public async Task SendProviderInviteEmailAsync(Provider provider, ProviderUser providerUser, string token)
         {
-            var message = CreateDefaultMessage($"Join {providerName}", email);
+            var message = CreateDefaultMessage($"Join {provider.Name}", providerUser.Email);
             var model = new ProviderUserInvitedViewModel
             {
-                ProviderName = CoreHelpers.SanitizeForEmail(providerName),
+                ProviderName = CoreHelpers.SanitizeForEmail(provider.Name),
                 Email = WebUtility.UrlEncode(providerUser.Email),
                 ProviderId = providerUser.ProviderId.ToString(),
                 ProviderUserId = providerUser.Id.ToString(),
-                ProviderNameUrlEncoded = WebUtility.UrlEncode(providerName),
+                ProviderNameUrlEncoded = WebUtility.UrlEncode(provider.Name),
                 Token = WebUtility.UrlEncode(token),
                 WebVaultUrl = _globalSettings.BaseServiceUri.VaultWithHash,
                 SiteName = _globalSettings.SiteName,
@@ -725,6 +733,15 @@ namespace Bit.Core.Services
             await AddMessageContentAsync(message, "UpdatedTempPassword", model);
             message.Category = "UpdatedTempPassword";
             await _mailDeliveryService.SendEmailAsync(message);
+        }
+
+        public string GenerateProtectionToken(string name, object[] options)
+        {
+            var optionsString = string.Join(" ", options.Select(option => option.ToString()));
+            var nowMillis = CoreHelpers.ToEpocMilliseconds(DateTime.UtcNow);
+            var token = _dataProtector.Protect(
+                $"{name} {optionsString} {nowMillis}");
+            return token;
         }
     }
 }

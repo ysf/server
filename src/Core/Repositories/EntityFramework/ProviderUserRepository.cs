@@ -7,6 +7,7 @@ using TableModel = Bit.Core.Models.Table;
 using EfModel = Bit.Core.Models.EntityFramework;
 using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
+using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Microsoft.EntityFrameworkCore;
 using Bit.Core.Models.Data;
@@ -119,7 +120,7 @@ namespace Bit.Core.Repositories.EntityFramework
             }
         }
 
-        public async Task<ICollection<ProviderUserProviderDetails>> GetManyDetailsByUserAsync(Guid userId, ProviderUserStatusType? status = null)
+        public async Task<ICollection<ProviderUserProviderDetails>> GetManyDetailsByUserAsync(Guid userId, AssociationStatusType? status = null)
         {
             using (var scope = ServiceScopeFactory.CreateScope())
             {
@@ -141,7 +142,7 @@ namespace Bit.Core.Repositories.EntityFramework
             }
         }
 
-        public async Task<IEnumerable<ProviderUserOrganizationDetails>> GetManyOrganizationDetailsByUserAsync(Guid userId, ProviderUserStatusType? status = null)
+        public async Task<IEnumerable<ProviderUserOrganizationDetails>> GetManyOrganizationDetailsByUserAsync(Guid userId, AssociationStatusType? status = null)
         {
             using (var scope = ServiceScopeFactory.CreateScope())
             {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bit.Core.Models.Business;
+using Bit.Core.Models.Business.Provider;
 using Bit.Core.Models.Mail;
 using Bit.Core.Models.Table;
 using Bit.Core.Models.Table.Provider;
@@ -171,7 +172,7 @@ namespace Bit.Core.Services
             return Task.FromResult(0);
         }
 
-        public Task SendProviderInviteEmailAsync(string providerName, ProviderUser providerUser, string token, string email)
+        public Task SendProviderInviteEmailAsync(Provider provider, ProviderUser providerUser, string token)
         {
             return Task.FromResult(0);
         }
@@ -189,6 +190,11 @@ namespace Bit.Core.Services
         public Task SendUpdatedTempPasswordEmailAsync(string email, string userName)
         {
             return Task.FromResult(0);
+        }
+
+        public string GenerateProtectionToken(string name, object[] options)
+        {
+            throw new NotImplementedException();
         }
     }
 }

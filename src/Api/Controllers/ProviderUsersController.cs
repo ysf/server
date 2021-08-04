@@ -66,8 +66,9 @@ namespace Bit.Api.Controllers
             {
                 throw new NotFoundException();
             }
-
-            await _providerService.InviteUserAsync(providerId, new ProviderUserInvite(model));
+            var invites = model.Emails.Select(email => 
+                new ProviderUserInvite(providerId, _userService.GetProperUserId(User).Value, email, model.Type.Value));
+            await _providerService.InviteUsersAsync(invites);
         }
         
         [HttpPost("reinvite")]
@@ -78,7 +79,9 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }
 
-            var result = await _providerService.ResendInvitesAsync(providerId, model.Ids);
+            var invites = model.Ids.Select(id => 
+                new ProviderUserInviteResend(providerId, _userService.GetProperUserId(User).Value, id));
+            var result = await _providerService.ResendInvitesAsync(invites);
             return new ListResponseModel<ProviderUserBulkResponseModel>(
                 result.Select(t => new ProviderUserBulkResponseModel(t.Item1.Id, t.Item2)));
         }
@@ -91,7 +94,11 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }
 
-            await _providerService.ResendInvitesAsync(providerId, new [] { id });
+            var invites = 
+            await _providerService.ResendInvitesAsync(new ProviderUserInviteResend[] 
+            { 
+                new ProviderUserInviteResend(providerId, id, _userService.GetProperUserId(User).Value)
+            });
         }
 
         [HttpPost("{id:guid}/accept")]
