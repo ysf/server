@@ -27,6 +27,7 @@ namespace Bit.Admin.Controllers
         private readonly IApplicationCacheService _applicationCacheService;
         private readonly GlobalSettings _globalSettings;
         private readonly IReferenceEventService _referenceEventService;
+        private readonly IUserService _userService;
 
         public OrganizationsController(
             IOrganizationRepository organizationRepository,
@@ -38,7 +39,8 @@ namespace Bit.Admin.Controllers
             IPaymentService paymentService,
             IApplicationCacheService applicationCacheService,
             GlobalSettings globalSettings,
-            IReferenceEventService referenceEventService)
+            IReferenceEventService referenceEventService,
+            IUserService userService)
         {
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
@@ -50,6 +52,7 @@ namespace Bit.Admin.Controllers
             _applicationCacheService = applicationCacheService;
             _globalSettings = globalSettings;
             _referenceEventService = referenceEventService;
+            _userService = userService;
         }
 
         public async Task<IActionResult> Index(string name = null, string userEmail = null, bool? paid = null,
@@ -145,7 +148,10 @@ namespace Bit.Admin.Controllers
             model.ToOrganization(organization);
             await _organizationRepository.ReplaceAsync(organization);
             await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
-            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.SalesAssisted, organization));
+            await _referenceEventService.RaiseEventAsync(new ReferenceEvent(ReferenceEventType.OrganizationEditedByAdmin, organization) {
+                EventRaisedByUser = (await _userService.GetUserByPrincipalAsync(User)).Email,
+                SalesAssistedTrialStarted = model.ExpirationDate != null && model.ExpirationDate != organization.ExpirationDate,
+            });
             return RedirectToAction("Edit", new { id });
         }
 
