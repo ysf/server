@@ -32,6 +32,7 @@ namespace Bit.Portal.Utilities
             }
 
             var attempt = await CheckTokenSignInAsync(user, token);
+            Logger.LogInformation(2, "TokenSignInAsycByUser - attempt:\n{attempt}", attempt);
             return attempt.Succeeded ?
                 await SignInOrTwoFactorAsync(user, isPersistent, bypassTwoFactor: true) : attempt;
         }
@@ -39,6 +40,7 @@ namespace Bit.Portal.Utilities
         public async Task<SignInResult> TokenSignInAsync(string userId, string token, bool isPersistent)
         {
             var user = await UserManager.FindByIdAsync(userId);
+            Logger.LogInformation(2, "TokenSignInAsycById - User:\n{user}", user);
             if (user == null)
             {
                 return SignInResult.Failed;
