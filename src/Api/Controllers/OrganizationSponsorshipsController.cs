@@ -78,12 +78,14 @@ namespace Bit.Api.Controllers
         {
             if (!await _organizationsSponsorshipService.ValidateRedemptionTokenAsync(sponsorshipToken, (await CurrentUser).Email))
             {
-                throw new BadRequestException("Failed to parse sponsorship token.");
+                throw new BadRequestException("No unredeemed sponsorship offer exists for you.");
             }
 
-            if (!await _currentContext.OrganizationOwner(model.SponsoredOrganizationId))
+            var sponsoringOrg = await _organizationRepository
+                .GetByIdAsync(existingSponsorshipOffer.SponsoringOrganizationId ?? default);
+            if (sponsoringOrg == null)
             {
-                throw new BadRequestException("Can only redeem sponsorship for an organization you own.");
+                throw new BadRequestException("Sponsor offer is invalid, cannot find the sponsoring organization.");
             }
 
             await _organizationsSponsorshipService.SetUpSponsorshipAsync(

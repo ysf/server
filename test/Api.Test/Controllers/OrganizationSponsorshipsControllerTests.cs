@@ -51,7 +51,7 @@ namespace Bit.Api.Test.Controllers
             var exception = await Assert.ThrowsAsync<BadRequestException>(() =>
                 sutProvider.Sut.RedeemSponsorship(sponsorshipToken, model));
 
-            Assert.Contains("Failed to parse sponsorship token.", exception.Message);
+            Assert.Contains("No unredeemed sponsorship offer exists for you.", exception.Message);
             await sutProvider.GetDependency<IOrganizationSponsorshipService>()
                 .DidNotReceiveWithAnyArgs()
                 .SetUpSponsorshipAsync(default, default);
@@ -72,7 +72,7 @@ namespace Bit.Api.Test.Controllers
             var exception = await Assert.ThrowsAsync<BadRequestException>(() =>
                 sutProvider.Sut.RedeemSponsorship(sponsorshipToken, model));
 
-            Assert.Contains("Can only redeem sponsorship for an organization you own.", exception.Message);
+            Assert.Contains("Sponsor offer is invalid, cannot find the sponsoring organization.", exception.Message);
             await sutProvider.GetDependency<IOrganizationSponsorshipService>()
                 .DidNotReceiveWithAnyArgs()
                 .SetUpSponsorshipAsync(default, default);
