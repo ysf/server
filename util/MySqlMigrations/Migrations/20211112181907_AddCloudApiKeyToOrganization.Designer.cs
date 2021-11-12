@@ -3,14 +3,16 @@ using System;
 using Bit.Core.Repositories.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Bit.MySqlMigrations.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20211112181907_AddCloudApiKeyToOrganization")]
+    partial class AddCloudApiKeyToOrganization
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -566,9 +568,6 @@ namespace Bit.MySqlMigrations.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("UseGroups")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("UseKeyConnector")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("UsePolicies")
@@ -1184,7 +1183,7 @@ namespace Bit.MySqlMigrations.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("varchar(32)");
 
-                    b.Property<bool>("UsesKeyConnector")
+                    b.Property<bool>("UsesCryptoAgent")
                         .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
