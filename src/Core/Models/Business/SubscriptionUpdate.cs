@@ -164,7 +164,7 @@ namespace Bit.Core.Models.Business
         public override List<SubscriptionItemOptions> UpgradeItemsOptions(Subscription subscription)
         {
             var result = new List<SubscriptionItemOptions>();
-            if (RemoveStripeItem(subscription) != null)
+            if (RemoveStripePlanId != null)
             {
                 result.Add(new SubscriptionItemOptions
                 {

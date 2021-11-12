@@ -16,10 +16,10 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Bit.Core.Test.Services
+namespace Bit.Core.Test.Services.OrganizationSponsorshipService
 {
     [SutProviderCustomize]
-    public class OrganizationSponsorshipServiceTests
+    public class CloudOrganizationSponsorshipServiceTests
     {
         private bool SponsorshipValidator(OrganizationSponsorship sponsorship, OrganizationSponsorship expectedSponsorship)
         {
@@ -108,7 +108,7 @@ namespace Bit.Core.Test.Services
         [BitAutoData]
         public async Task OfferSponsorship_CreatesSponsorship(Organization sponsoringOrg, OrganizationUser sponsoringOrgUser,
             string sponsoredEmail, string friendlyName, Guid sponsorshipId,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             const string email = "test@bitwarden.com";
 
@@ -149,7 +149,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task OfferSponsorship_CreateSponsorshipThrows_RevertsDatabase(Organization sponsoringOrg, OrganizationUser sponsoringOrgUser,
-            string sponsoredEmail, string friendlyName, SutProvider<OrganizationSponsorshipService> sutProvider)
+            string sponsoredEmail, string friendlyName, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sponsoringOrg.PlanType = PlanType.EnterpriseAnnually;
             sponsoringOrgUser.Status = OrganizationUserStatusType.Confirmed;
@@ -174,41 +174,8 @@ namespace Bit.Core.Test.Services
 
         [Theory]
         [BitAutoData]
-        public async Task ResendSponsorshipOffer_SponsoringOrgNotFound_ThrowsBadRequest(
-            OrganizationUser orgUser, OrganizationSponsorship sponsorship,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
-        {
-            var exception = await Assert.ThrowsAsync<BadRequestException>(() =>
-                sutProvider.Sut.ResendSponsorshipOfferAsync(null, orgUser, sponsorship, "test@bitwarden.com"));
-
-            Assert.Contains("Cannot find the requested sponsoring organization.", exception.Message);
-            await sutProvider.GetDependency<IMailService>()
-                .DidNotReceiveWithAnyArgs()
-                .SendFamiliesForEnterpriseOfferEmailAsync(default, default, default, default);
-        }
-
-        [Theory]
-        [BitAutoData]
-        public async Task ResendSponsorshipOffer_SponsoringOrgUserNotFound_ThrowsBadRequest(Organization org,
-            OrganizationSponsorship sponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
-        {
-            sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(org.Id).Returns(org);
-
-            var exception = await Assert.ThrowsAsync<BadRequestException>(() =>
-                sutProvider.Sut.ResendSponsorshipOfferAsync(org, null, sponsorship, "test@bitwarden.com"));
-
-            Assert.Contains("Only confirmed users can sponsor other organizations.", exception.Message);
-            await sutProvider.GetDependency<IMailService>()
-                .DidNotReceiveWithAnyArgs()
-                .SendFamiliesForEnterpriseOfferEmailAsync(default, default, default, default);
-        }
-
-        [Theory]
-        [BitAutoData]
-        [BitMemberAutoData(nameof(NonConfirmedOrganizationUsersStatuses))]
-        public async Task ResendSponsorshipOffer_SponsoringOrgUserNotConfirmed_ThrowsBadRequest(OrganizationUserStatusType status,
-            Organization org, OrganizationUser orgUser, OrganizationSponsorship sponsorship,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+        public async Task SendSponsorshipOfferAsync(Organization org, OrganizationSponsorship sponsorship,
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             orgUser.Status = status;
 
@@ -345,7 +312,7 @@ namespace Bit.Core.Test.Services
         }
 
         private async Task AssertRemovedSponsoredPaymentAsync(Organization sponsoredOrg,
-            OrganizationSponsorship sponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
+            OrganizationSponsorship sponsorship, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.GetDependency<IPaymentService>().Received(1)
                 .RemoveOrganizationSponsorshipAsync(sponsoredOrg, sponsorship);
@@ -355,7 +322,7 @@ namespace Bit.Core.Test.Services
         }
 
         private async Task AssertRemovedSponsorshipAsync(OrganizationSponsorship sponsorship,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             if (sponsorship.CloudSponsor || sponsorship.SponsorshipLapsedDate.HasValue)
             {
@@ -369,7 +336,7 @@ namespace Bit.Core.Test.Services
             }
         }
 
-        private static async Task AssertDidNotRemoveSponsoredPaymentAsync(SutProvider<OrganizationSponsorshipService> sutProvider)
+        private static async Task AssertDidNotRemoveSponsoredPaymentAsync(SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.GetDependency<IPaymentService>().DidNotReceiveWithAnyArgs()
                 .RemoveOrganizationSponsorshipAsync(default, default);
@@ -379,7 +346,7 @@ namespace Bit.Core.Test.Services
                 .SendFamiliesForEnterpriseSponsorshipRevertingEmailAsync(default, default);
         }
 
-        private static async Task AssertDidNotRemoveSponsorshipAsync(SutProvider<OrganizationSponsorshipService> sutProvider)
+        private static async Task AssertDidNotRemoveSponsorshipAsync(SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.GetDependency<IOrganizationSponsorshipRepository>().DidNotReceiveWithAnyArgs()
                 .DeleteAsync(default);
@@ -390,7 +357,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task ValidateSponsorshipAsync_NoSponsoredOrg_EarlyReturn(Guid sponsoredOrgId,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(sponsoredOrgId).Returns((Organization)null);
 
@@ -404,7 +371,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task ValidateSponsorshipAsync_NoExistingSponsorship_UpdatesStripePlan(Organization sponsoredOrg,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(sponsoredOrg.Id).Returns(sponsoredOrg);
 
@@ -417,7 +384,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task ValidateSponsorshipAsync_SponsoringOrgNull_UpdatesStripePlan(Organization sponsoredOrg,
-            OrganizationSponsorship existingSponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
+            OrganizationSponsorship existingSponsorship, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             existingSponsorship.SponsoringOrganizationId = null;
 
@@ -435,7 +402,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task ValidateSponsorshipAsync_SponsoringOrgUserNull_UpdatesStripePlan(Organization sponsoredOrg,
-            OrganizationSponsorship existingSponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
+            OrganizationSponsorship existingSponsorship, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             existingSponsorship.SponsoringOrganizationUserId = null;
 
@@ -453,7 +420,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task ValidateSponsorshipAsync_SponsorshipTypeNull_UpdatesStripePlan(Organization sponsoredOrg,
-            OrganizationSponsorship existingSponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
+            OrganizationSponsorship existingSponsorship, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             existingSponsorship.PlanSponsorshipType = null;
 
@@ -471,7 +438,7 @@ namespace Bit.Core.Test.Services
         [Theory]
         [BitAutoData]
         public async Task ValidateSponsorshipAsync_SponsoringOrgNotFound_UpdatesStripePlan(Organization sponsoredOrg,
-            OrganizationSponsorship existingSponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
+            OrganizationSponsorship existingSponsorship, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sutProvider.GetDependency<IOrganizationSponsorshipRepository>()
                 .GetBySponsoredOrganizationIdAsync(sponsoredOrg.Id).Returns(existingSponsorship);
@@ -488,7 +455,7 @@ namespace Bit.Core.Test.Services
         [BitMemberAutoData(nameof(NonEnterprisePlanTypes))]
         public async Task ValidateSponsorshipAsync_SponsoringOrgNotEnterprise_UpdatesStripePlan(PlanType planType,
             Organization sponsoredOrg, OrganizationSponsorship existingSponsorship, Organization sponsoringOrg,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sponsoringOrg.PlanType = planType;
             existingSponsorship.SponsoringOrganizationId = sponsoringOrg.Id;
@@ -509,7 +476,7 @@ namespace Bit.Core.Test.Services
         [BitMemberAutoData(nameof(EnterprisePlanTypes))]
         public async Task ValidateSponsorshipAsync_SponsoringOrgDisabled_UpdatesStripePlan(PlanType planType,
             Organization sponsoredOrg, OrganizationSponsorship existingSponsorship, Organization sponsoringOrg,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sponsoringOrg.PlanType = planType;
             sponsoringOrg.Enabled = false;
@@ -531,7 +498,7 @@ namespace Bit.Core.Test.Services
         [BitMemberAutoData(nameof(EnterprisePlanTypes))]
         public async Task ValidateSponsorshipAsync_Valid(PlanType planType,
             Organization sponsoredOrg, OrganizationSponsorship existingSponsorship, Organization sponsoringOrg,
-            SutProvider<OrganizationSponsorshipService> sutProvider)
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             sponsoringOrg.PlanType = planType;
             sponsoringOrg.Enabled = true;
@@ -636,7 +603,7 @@ namespace Bit.Core.Test.Services
 
         [Theory]
         [BitAutoData]
-        public async Task DoRemoveSponsorshipAsync_NullDoNothing(SutProvider<OrganizationSponsorshipService> sutProvider)
+        public async Task RemoveSponsorshipAsync_NullDoNothing(SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.Sut.DoRemoveSponsorshipAsync(null, null);
 
@@ -646,8 +613,8 @@ namespace Bit.Core.Test.Services
 
         [Theory]
         [BitAutoData]
-        public async Task DoRemoveSponsorshipAsync_NullSponsoredOrg(OrganizationSponsorship sponsorship,
-   SutProvider<OrganizationSponsorshipService> sutProvider)
+        public async Task RemoveSponsorshipAsync_NullSponsoredOrg(OrganizationSponsorship sponsorship,
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.Sut.DoRemoveSponsorshipAsync(null, sponsorship);
 
@@ -657,8 +624,8 @@ namespace Bit.Core.Test.Services
 
         [Theory]
         [BitAutoData]
-        public async Task DoRemoveSponsorshipAsync_NullSponsorship(Organization sponsoredOrg,
-    SutProvider<OrganizationSponsorshipService> sutProvider)
+        public async Task RemoveSponsorshipAsync_NullSponsorship(Organization sponsoredOrg,
+            SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.Sut.DoRemoveSponsorshipAsync(sponsoredOrg, null);
 
@@ -668,8 +635,8 @@ namespace Bit.Core.Test.Services
 
         [Theory]
         [BitAutoData]
-        public async Task DoRemoveSponsorshipAsync_RemoveBoth(Organization sponsoredOrg,
-            OrganizationSponsorship sponsorship, SutProvider<OrganizationSponsorshipService> sutProvider)
+        public async Task RemoveSponsorshipAsync_RemoveBoth(Organization sponsoredOrg,
+            OrganizationSponsorship sponsorship, SutProvider<CloudOrganizationSponsorshipService> sutProvider)
         {
             await sutProvider.Sut.DoRemoveSponsorshipAsync(sponsoredOrg, sponsorship);
 
