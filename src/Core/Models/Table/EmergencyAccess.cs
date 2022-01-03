@@ -5,49 +5,25 @@ using Bit.Core.Utilities;
 
 namespace Bit.Core.Models.Table
 {
-    public class EmergencyAccess : ITableObject<Guid>
+    public record EmergencyAccess : ITableObject<Guid>
     {
         public EmergencyAccess()
         {
         }
 
-        public EmergencyAccess(Guid grantorId, string email, EmergencyAccessStatusType status,
-            EmergencyAccessType type, int waitTimeDays, DateTime creationDate, DateTime revisionDate)
-        {
-            GrantorId = grantorId;
-            Email = email;
-            Status = status;
-            Type = type;
-            WaitTimeDays = waitTimeDays;
-            CreationDate = creationDate;
-            RevisionDate = revisionDate;
-        }
-
-        public EmergencyAccess(Guid grantorId, string email, EmergencyAccessStatusType status,
-            EmergencyAccessType type, int waitTimeDays, DateTime creationDate, DateTime revisionDate,
-            Guid id, Guid? granteeId, string keyEncrypted, DateTime? recoveryInitiatedDate, DateTime? lastNotificationDate)
-            : this(grantorId, email, status, type, waitTimeDays, creationDate, revisionDate)
-        {
-            Id = id;
-            GranteeId = granteeId;
-            KeyEncrypted = keyEncrypted;
-            RecoveryInitiatedDate = recoveryInitiatedDate;
-            LastNotificationDate = lastNotificationDate;
-        }
-
         public Guid Id { get; set; }
-        public Guid GrantorId { get; private set; }
-        public Guid? GranteeId { get; private set; }
+        public Guid GrantorId { get; init; }
+        public Guid? GranteeId { get; init; }
         [MaxLength(256)]
-        public string Email { get; private set; }
-        public string KeyEncrypted { get; private set; }
-        public EmergencyAccessType Type { get; private set; }
-        public EmergencyAccessStatusType Status { get; private set; }
-        public int WaitTimeDays { get; private set; }
-        public DateTime? RecoveryInitiatedDate { get; private set; }
-        public DateTime? LastNotificationDate { get; private set; }
-        public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
-        public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
+        public string Email { get; init; }
+        public string KeyEncrypted { get; init; }
+        public EmergencyAccessType Type { get; init; }
+        public EmergencyAccessStatusType Status { get; init; }
+        public int WaitTimeDays { get; init; }
+        public DateTime? RecoveryInitiatedDate { get; init; }
+        public DateTime? LastNotificationDate { get; init; }
+        public DateTime CreationDate { get; init; } = DateTime.UtcNow;
+        public DateTime RevisionDate { get; init; } = DateTime.UtcNow;
 
         public void SetNewId()
         {
@@ -56,54 +32,66 @@ namespace Bit.Core.Models.Table
 
         public EmergencyAccess ToEmergencyAccess()
         {
-            return new EmergencyAccess(GrantorId, Email, Status, Type, WaitTimeDays, CreationDate, RevisionDate, Id,
-                GranteeId, KeyEncrypted, RecoveryInitiatedDate, LastNotificationDate);
+            return this with { };
         }
 
-        public void Accept(Guid granteeId)
+        public EmergencyAccess Accept(Guid granteeId)
         {
-            Status = EmergencyAccessStatusType.Accepted;
-            GranteeId = granteeId;
-            Email = null;
+            return this with
+            {
+                Status = EmergencyAccessStatusType.Accepted,
+                GranteeId = granteeId,
+                Email = null,
+            };
         }
 
-        public void Confirm(string key)
+        public EmergencyAccess Confirm(string key)
         {
-            Status = EmergencyAccessStatusType.Confirmed;
-            KeyEncrypted = key;
-            Email = null;
+            return this with
+            {
+                Status = EmergencyAccessStatusType.Confirmed,
+                KeyEncrypted = key,
+                Email = null,
+            };
         }
 
-        public void InitiateRecovery()
+        public EmergencyAccess InitiateRecovery()
         {
-            Status = EmergencyAccessStatusType.RecoveryInitiated;
-            RecoveryInitiatedDate = LastNotificationDate = RevisionDate = DateTime.UtcNow;
+            var now = DateTime.Now;
+            return this with
+            {
+                Status = EmergencyAccessStatusType.RecoveryInitiated,
+                RecoveryInitiatedDate = now,
+                LastNotificationDate = now,
+                RevisionDate = now,
+            };
         }
 
-        public void ApproveRecovery()
+        public EmergencyAccess ApproveRecovery()
         {
-            Status = EmergencyAccessStatusType.RecoveryApproved;
+            return this with { Status = EmergencyAccessStatusType.RecoveryApproved };
         }
 
-        public void ConfirmRecovery()
+        public EmergencyAccess ConfirmRecovery()
         {
-            Status = EmergencyAccessStatusType.Confirmed;
+            return this with { Status = EmergencyAccessStatusType.Confirmed };
         }
 
-        public void SentRecoveryNotification()
+        public EmergencyAccess SentRecoveryNotification()
         {
-            LastNotificationDate = DateTime.UtcNow;
+            return this with { LastNotificationDate = DateTime.UtcNow };
         }
 
-        public void Update(EmergencyAccessType type, int waitTimeDays, string keyEncrypted)
+        public EmergencyAccess Update(EmergencyAccessType type, int waitTimeDays, string keyEncrypted)
         {
             // Ensure we only set keys for a confirmed emergency access.
+            var ke = KeyEncrypted;
             if (!string.IsNullOrWhiteSpace(KeyEncrypted) && !string.IsNullOrWhiteSpace(keyEncrypted))
             {
-                KeyEncrypted = keyEncrypted;
+                ke = keyEncrypted;
             }
-            Type = type;
-            WaitTimeDays = waitTimeDays;
+
+            return this with { KeyEncrypted = ke, Type = type, WaitTimeDays = waitTimeDays, };
         }
     }
 }

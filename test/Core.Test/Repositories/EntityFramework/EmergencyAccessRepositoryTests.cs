@@ -40,9 +40,11 @@ namespace Bit.Core.Test.Repositories.EntityFramework
                 }
                 sut.ClearChangeTracking();
 
-                emergencyAccess.SetProperty(e => e.GrantorId, users[0].Id);
-                emergencyAccess.SetProperty(e => e.GranteeId, users[0].Id);
-                var postEfEmergencyAccess = await sut.CreateAsync(emergencyAccess);
+                var postEfEmergencyAccess = await sut.CreateAsync(emergencyAccess with
+                {
+                    GrantorId = users[0].Id,
+                    GranteeId = users[0].Id,
+                });
                 sut.ClearChangeTracking();
 
                 var savedEmergencyAccess = await sut.GetByIdAsync(postEfEmergencyAccess.Id);
@@ -54,9 +56,11 @@ namespace Bit.Core.Test.Repositories.EntityFramework
                 users[j] = await sqlUserRepo.CreateAsync(users[j]);
             }
 
-            emergencyAccess.SetProperty(e => e.GrantorId, users[0].Id);
-            emergencyAccess.SetProperty(e => e.GranteeId, users[0].Id);
-            var sqlEmergencyAccess = await sqlEmergencyAccessRepo.CreateAsync(emergencyAccess);
+            var sqlEmergencyAccess = await sqlEmergencyAccessRepo.CreateAsync(emergencyAccess with
+            {
+                GrantorId = users[0].Id,
+                GranteeId = users[0].Id,
+            });
             var savedSqlEmergencyAccess = await sqlEmergencyAccessRepo.GetByIdAsync(sqlEmergencyAccess.Id);
             savedEmergencyAccesss.Add(savedSqlEmergencyAccess);
 

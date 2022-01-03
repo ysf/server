@@ -70,9 +70,16 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You cannot use Emergency Access Takeover because you are using Key Connector.");
             }
 
-            var emergencyAccess = new EmergencyAccess(invitingUser.Id, email.ToLowerInvariant(),
-                EmergencyAccessStatusType.Invited, type, waitTime,
-                DateTime.UtcNow, DateTime.UtcNow);
+            var emergencyAccess = new EmergencyAccess
+            {
+                GrantorId = invitingUser.Id,
+                Email = email.ToLowerInvariant(),
+                Status = EmergencyAccessStatusType.Invited,
+                Type = type,
+                WaitTimeDays = waitTime,
+                CreationDate = DateTime.UtcNow,
+                RevisionDate = DateTime.UtcNow,
+            };
 
             await _emergencyAccessRepository.CreateAsync(emergencyAccess);
             await SendInviteAsync(emergencyAccess, NameOrEmail(invitingUser));
