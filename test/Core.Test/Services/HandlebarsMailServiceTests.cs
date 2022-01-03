@@ -84,11 +84,6 @@ namespace Bit.Core.Test.Services
                 { ("deviceType", typeof(string)), "Mobile" },
                 { ("timestamp", typeof(DateTime)), DateTime.UtcNow.AddDays(1)},
                 { ("ip", typeof(string)), "127.0.0.1" },
-                { ("emergencyAccess", typeof(EmergencyAccess)), new EmergencyAccess
-                {
-                    Id = Guid.NewGuid(),
-                    Email = "test@bitwarden.com",
-                }},
                 { ("granteeEmail", typeof(string)), "test@bitwarden.com" },
                 { ("grantorName", typeof(string)), "Test User" },
                 { ("initiatingName", typeof(string)), "Test" },
@@ -99,11 +94,6 @@ namespace Bit.Core.Test.Services
                     Id = Guid.NewGuid(),
                 }},
                 { ("name", typeof(string)), "Test Name" },
-                { ("ea", typeof(EmergencyAccess)), new EmergencyAccess
-                {
-                    Id = Guid.NewGuid(),
-                    Email = "test@bitwarden.com",
-                }},
                 { ("userName", typeof(string)), "testUser" },
                 { ("orgName", typeof(string)), "Test Org Name" },
                 { ("providerName", typeof(string)), "testProvider" },

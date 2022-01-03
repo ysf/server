@@ -9,6 +9,7 @@ using Bit.Core.Test.AutoFixture.EmergencyAccessFixtures;
 using Bit.Core.Test.AutoFixture.Relays;
 using Bit.Core.Test.AutoFixture.TransactionFixtures;
 using Bit.Core.Test.Repositories.EntityFramework.EqualityComparers;
+using Bit.Test.Common.Helpers;
 using Xunit;
 using EfRepo = Bit.Core.Repositories.EntityFramework;
 using SqlRepo = Bit.Core.Repositories.SqlServer;
@@ -39,8 +40,8 @@ namespace Bit.Core.Test.Repositories.EntityFramework
                 }
                 sut.ClearChangeTracking();
 
-                emergencyAccess.GrantorId = users[0].Id;
-                emergencyAccess.GranteeId = users[0].Id;
+                emergencyAccess.SetProperty(e => e.GrantorId, users[0].Id);
+                emergencyAccess.SetProperty(e => e.GranteeId, users[0].Id);
                 var postEfEmergencyAccess = await sut.CreateAsync(emergencyAccess);
                 sut.ClearChangeTracking();
 
@@ -53,8 +54,8 @@ namespace Bit.Core.Test.Repositories.EntityFramework
                 users[j] = await sqlUserRepo.CreateAsync(users[j]);
             }
 
-            emergencyAccess.GrantorId = users[0].Id;
-            emergencyAccess.GranteeId = users[0].Id;
+            emergencyAccess.SetProperty(e => e.GrantorId, users[0].Id);
+            emergencyAccess.SetProperty(e => e.GranteeId, users[0].Id);
             var sqlEmergencyAccess = await sqlEmergencyAccessRepo.CreateAsync(emergencyAccess);
             var savedSqlEmergencyAccess = await sqlEmergencyAccessRepo.GetByIdAsync(sqlEmergencyAccess.Id);
             savedEmergencyAccesss.Add(savedSqlEmergencyAccess);

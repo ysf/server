@@ -2,6 +2,7 @@
 using Bit.Core.Enums;
 using Bit.Core.Models.Table;
 using Bit.Core.Utilities;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Bit.Api.Models.Request
 {
@@ -27,13 +28,8 @@ namespace Bit.Api.Models.Request
 
         public EmergencyAccess ToEmergencyAccess(EmergencyAccess existingEmergencyAccess)
         {
-            // Ensure we only set keys for a confirmed emergency access.
-            if (!string.IsNullOrWhiteSpace(existingEmergencyAccess.KeyEncrypted) && !string.IsNullOrWhiteSpace(KeyEncrypted))
-            {
-                existingEmergencyAccess.KeyEncrypted = KeyEncrypted;
-            }
-            existingEmergencyAccess.Type = Type;
-            existingEmergencyAccess.WaitTimeDays = WaitTimeDays;
+            existingEmergencyAccess.Update(Type, WaitTimeDays, KeyEncrypted);
+            
             return existingEmergencyAccess;
         }
     }

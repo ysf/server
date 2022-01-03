@@ -8,6 +8,7 @@ using Bit.Core.Test.AutoFixture;
 using Bit.Core.Test.AutoFixture.Attributes;
 using Bit.Test.Common.AutoFixture;
 using Bit.Test.Common.AutoFixture.Attributes;
+using Bit.Test.Common.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -34,12 +35,10 @@ namespace Bit.Core.Test.Services
             SutProvider<EmergencyAccessService> sutProvider, User confirmingUser, string key)
         {
             confirmingUser.UsesKeyConnector = true;
-            var emergencyAccess = new EmergencyAccess
-            {
-                Status = Enums.EmergencyAccessStatusType.Accepted,
-                GrantorId = confirmingUser.Id,
-                Type = Enums.EmergencyAccessType.Takeover,
-            };
+            var emergencyAccess = new EmergencyAccess();
+            emergencyAccess.SetProperty(e => e.Status, Enums.EmergencyAccessStatusType.Accepted);
+            emergencyAccess.SetProperty(e => e.GrantorId, confirmingUser.Id);
+            emergencyAccess.SetProperty(e => e.Type, Enums.EmergencyAccessType.Takeover);
 
             sutProvider.GetDependency<IUserRepository>().GetByIdAsync(confirmingUser.Id).Returns(confirmingUser);
             sutProvider.GetDependency<IEmergencyAccessRepository>().GetByIdAsync(Arg.Any<Guid>()).Returns(emergencyAccess);
@@ -56,11 +55,9 @@ namespace Bit.Core.Test.Services
             SutProvider<EmergencyAccessService> sutProvider, User savingUser)
         {
             savingUser.UsesKeyConnector = true;
-            var emergencyAccess = new EmergencyAccess
-            {
-                Type = Enums.EmergencyAccessType.Takeover,
-                GrantorId = savingUser.Id,
-            };
+            var emergencyAccess = new EmergencyAccess();
+            emergencyAccess.SetProperty(e => e.Type, Enums.EmergencyAccessType.Takeover);
+            emergencyAccess.SetProperty(e => e.GrantorId, savingUser.Id);
 
             sutProvider.GetDependency<IUserService>().GetUserByIdAsync(savingUser.Id).Returns(savingUser);
 
@@ -76,13 +73,11 @@ namespace Bit.Core.Test.Services
             SutProvider<EmergencyAccessService> sutProvider, User initiatingUser, User grantor)
         {
             grantor.UsesKeyConnector = true;
-            var emergencyAccess = new EmergencyAccess
-            {
-                Status = Enums.EmergencyAccessStatusType.Confirmed,
-                GranteeId = initiatingUser.Id,
-                GrantorId = grantor.Id,
-                Type = Enums.EmergencyAccessType.Takeover,
-            };
+            var emergencyAccess = new EmergencyAccess();
+            emergencyAccess.SetProperty(e => e.Status, Enums.EmergencyAccessStatusType.Confirmed);
+            emergencyAccess.SetProperty(e => e.GranteeId, initiatingUser.Id);
+            emergencyAccess.SetProperty(e => e.GrantorId, grantor.Id);
+            emergencyAccess.SetProperty(e => e.Type, Enums.EmergencyAccessType.Takeover);
 
             sutProvider.GetDependency<IEmergencyAccessRepository>().GetByIdAsync(Arg.Any<Guid>()).Returns(emergencyAccess);
             sutProvider.GetDependency<IUserRepository>().GetByIdAsync(grantor.Id).Returns(grantor);
@@ -99,13 +94,11 @@ namespace Bit.Core.Test.Services
             SutProvider<EmergencyAccessService> sutProvider, User requestingUser, User grantor)
         {
             grantor.UsesKeyConnector = true;
-            var emergencyAccess = new EmergencyAccess
-            {
-                GrantorId = grantor.Id,
-                GranteeId = requestingUser.Id,
-                Status = Enums.EmergencyAccessStatusType.RecoveryApproved,
-                Type = Enums.EmergencyAccessType.Takeover,
-            };
+            var emergencyAccess = new EmergencyAccess();
+            emergencyAccess.SetProperty(e => e.GrantorId, grantor.Id);
+            emergencyAccess.SetProperty(e => e.GranteeId, requestingUser.Id);
+            emergencyAccess.SetProperty(e => e.Status, Enums.EmergencyAccessStatusType.RecoveryApproved);
+            emergencyAccess.SetProperty(e => e.Type, Enums.EmergencyAccessType.Takeover);
 
             sutProvider.GetDependency<IEmergencyAccessRepository>().GetByIdAsync(Arg.Any<Guid>()).Returns(emergencyAccess);
             sutProvider.GetDependency<IUserRepository>().GetByIdAsync(grantor.Id).Returns(grantor);

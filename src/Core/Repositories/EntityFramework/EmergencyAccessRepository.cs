@@ -87,24 +87,10 @@ namespace Bit.Core.Repositories.EntityFramework
                 var query = view.Run(dbContext).Where(ea =>
                     ea.Status == EmergencyAccessStatusType.RecoveryInitiated
                 );
-                var notifies = await query.Select(ea => new EmergencyAccessNotify
-                {
-                    Id = ea.Id,
-                    GrantorId = ea.GrantorId,
-                    GranteeId = ea.GranteeId,
-                    Email = ea.Email,
-                    KeyEncrypted = ea.KeyEncrypted,
-                    Type = ea.Type,
-                    Status = ea.Status,
-                    WaitTimeDays = ea.WaitTimeDays,
-                    RecoveryInitiatedDate = ea.RecoveryInitiatedDate,
-                    LastNotificationDate = ea.LastNotificationDate,
-                    CreationDate = ea.CreationDate,
-                    RevisionDate = ea.RevisionDate,
-                    GranteeName = ea.GranteeName,
-                    GranteeEmail = ea.GranteeEmail,
-                    GrantorEmail = ea.GrantorEmail,
-                }).ToListAsync();
+                var notifies = await query.Select(ea => new EmergencyAccessNotify(ea.Id, ea.GrantorId,
+                    ea.GranteeId, ea.Email, ea.KeyEncrypted, ea.Type, ea.Status, ea.WaitTimeDays,
+                    ea.RecoveryInitiatedDate, ea.LastNotificationDate, ea.CreationDate, ea.RevisionDate,
+                    ea.GranteeName, ea.GranteeEmail, ea.GrantorEmail)).ToListAsync();
                 return notifies;
             }
         }

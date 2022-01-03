@@ -70,16 +70,9 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You cannot use Emergency Access Takeover because you are using Key Connector.");
             }
 
-            var emergencyAccess = new EmergencyAccess
-            {
-                GrantorId = invitingUser.Id,
-                Email = email.ToLowerInvariant(),
-                Status = EmergencyAccessStatusType.Invited,
-                Type = type,
-                WaitTimeDays = waitTime,
-                CreationDate = DateTime.UtcNow,
-                RevisionDate = DateTime.UtcNow,
-            };
+            var emergencyAccess = new EmergencyAccess(invitingUser.Id, email.ToLowerInvariant(),
+                EmergencyAccessStatusType.Invited, type, waitTime,
+                DateTime.UtcNow, DateTime.UtcNow);
 
             await _emergencyAccessRepository.CreateAsync(emergencyAccess);
             await SendInviteAsync(emergencyAccess, NameOrEmail(invitingUser));
@@ -141,9 +134,7 @@ namespace Bit.Core.Services
 
             var granteeEmail = emergencyAccess.Email;
 
-            emergencyAccess.Status = EmergencyAccessStatusType.Accepted;
-            emergencyAccess.GranteeId = user.Id;
-            emergencyAccess.Email = null;
+            emergencyAccess.Accept(user.Id);
 
             var grantor = await userService.GetUserByIdAsync(emergencyAccess.GrantorId);
 
@@ -181,9 +172,8 @@ namespace Bit.Core.Services
 
             var grantee = await _userRepository.GetByIdAsync(emergencyAccess.GranteeId.Value);
 
-            emergencyAccess.Status = EmergencyAccessStatusType.Confirmed;
-            emergencyAccess.KeyEncrypted = key;
-            emergencyAccess.Email = null;
+            emergencyAccess.Confirm(key);
+
             await _emergencyAccessRepository.ReplaceAsync(emergencyAccess);
             await _mailService.SendEmergencyAccessConfirmedEmailAsync(NameOrEmail(grantor), grantee.Email);
 
@@ -226,11 +216,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You cannot takeover an account that is using Key Connector.");
             }
 
-            var now = DateTime.UtcNow;
-            emergencyAccess.Status = EmergencyAccessStatusType.RecoveryInitiated;
-            emergencyAccess.RevisionDate = now;
-            emergencyAccess.RecoveryInitiatedDate = now;
-            emergencyAccess.LastNotificationDate = now;
+            emergencyAccess.InitiateRecovery();
             await _emergencyAccessRepository.ReplaceAsync(emergencyAccess);
 
             await _mailService.SendEmergencyAccessRecoveryInitiated(emergencyAccess, NameOrEmail(initiatingUser), grantor.Email);
@@ -246,7 +232,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("Emergency Access not valid.");
             }
 
-            emergencyAccess.Status = EmergencyAccessStatusType.RecoveryApproved;
+            emergencyAccess.ApproveRecovery();
             await _emergencyAccessRepository.ReplaceAsync(emergencyAccess);
 
             var grantee = await _userRepository.GetByIdAsync(emergencyAccess.GranteeId.Value);
@@ -264,7 +250,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("Emergency Access not valid.");
             }
 
-            emergencyAccess.Status = EmergencyAccessStatusType.Confirmed;
+            emergencyAccess.ConfirmRecovery();
             await _emergencyAccessRepository.ReplaceAsync(emergencyAccess);
 
             var grantee = await _userRepository.GetByIdAsync(emergencyAccess.GranteeId.Value);
@@ -343,7 +329,7 @@ namespace Bit.Core.Services
             foreach (var notify in toNotify)
             {
                 var ea = notify.ToEmergencyAccess();
-                ea.LastNotificationDate = DateTime.UtcNow;
+                ea.SentRecoveryNotification();
                 await _emergencyAccessRepository.ReplaceAsync(ea);
 
                 var granteeNameOrEmail = string.IsNullOrWhiteSpace(notify.GranteeName) ? notify.GranteeEmail : notify.GranteeName;
@@ -359,7 +345,7 @@ namespace Bit.Core.Services
             foreach (var details in expired)
             {
                 var ea = details.ToEmergencyAccess();
-                ea.Status = EmergencyAccessStatusType.RecoveryApproved;
+                ea.ApproveRecovery();
                 await _emergencyAccessRepository.ReplaceAsync(ea);
 
                 var grantorNameOrEmail = string.IsNullOrWhiteSpace(details.GrantorName) ? details.GrantorEmail : details.GrantorName;
