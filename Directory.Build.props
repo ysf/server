@@ -6,4 +6,223 @@
 		<RootNamespace>Bit.$(MSBuildProjectName)</RootNamespace>
 	</PropertyGroup>
 
+  <PropertyGroup Label="Versions">
+    <AspNetCoreVersion>5.0.9</AspNetCoreVersion>
+    <ExtensionsConfigurationVersion>5.0.0</ExtensionsConfigurationVersion>
+    <EntityFrameworkCoreVersion>5.0.12</EntityFrameworkCoreVersion>
+    <!--
+      Source: https://github.com/aws/aws-sdk-net/tree/master/sdk/src/Services/SimpleEmail
+      NuGet: https://www.nuget.org/packages/AWSSDK.SimpleEmail/
+    -->
+    <AwsSdkSimpleEmailVersion>3.3.101.182</AwsSdkSimpleEmailVersion>
+    <!--
+      Source: https://github.com/aws/aws-sdk-net/tree/master/sdk/src/Services/SQS
+      NuGet: https://www.nuget.org/packages/AWSSDK.SQS/
+    -->
+    <AwsSdkSqsVersion>3.3.103.15</AwsSdkSqsVersion>
+    <!--
+      Source: https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/extensions/Azure.Extensions.AspNetCore.DataProtection.Blobs
+      NuGet: https://www.nuget.org/packages/Azure.Extensions.AspNetCore.DataProtection.Blobs/
+    -->
+    <AzureExtensionsAspNetCoreDataProtectionBlobsVersion>1.2.1</AzureExtensionsAspNetCoreDataProtectionBlobsVersion>
+    <!--
+      Source: https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/storage/Azure.Storage.Blobs
+      NuGet: https://www.nuget.org/packages/Azure.Storage.Blobs/
+    -->
+    <AzureStorageBlobsVersion>12.10.0</AzureStorageBlobsVersion>
+    <!--
+      Source: https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/storage/Azure.Storage.Queues
+      NuGet: https://www.nuget.org/packages/Azure.Storage.Queues/
+    -->
+    <AzureStorageQueuesVersion>12.3.2</AzureStorageQueuesVersion>
+    <!--
+      Source: https://github.com/bitpay/dotnet-bitpay-light-client
+      NuGet: https://www.nuget.org/packages/BitPay.Light/
+    -->
+    <BitPayLightVersion>1.0.1907</BitPayLightVersion>
+    <!--
+      Source: https://github.com/passwordless-lib/fido2-net-lib
+      NuGet: https://www.nuget.org/packages/Fido2.AspNet
+    -->
+    <Fido2AspNetVersion>1.1.0</Fido2AspNetVersion>
+    <!--
+      Source: https://github.com/Handlebars-Net/Handlebars.Net
+      NuGet: https://www.nuget.org/packages/Handlebars.Net/
+    -->
+    <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
+    <!--
+      Source: https://github.com/IdentityServer/IdentityServer4.AccessTokenValidation
+      NuGet: https://www.nuget.org/packages/IdentityServer4.AccessTokenValidation/
+    -->
+    <IdentityServer4AccessTokenValidationVersion>3.0.1</IdentityServer4AccessTokenValidationVersion>
+    <!--
+      Source: https://github.com/jstedfast/MailKit
+      NuGet: https://www.nuget.org/packages/MailKit/
+    -->
+    <MailKitVersion>2.8.0</MailKitVersion>
+    <!--
+      Source: ~
+      NuGet: https://www.nuget.org/packages/Microsoft.Azure.Cosmos.Table/
+    -->
+    <MicrosoftAzureCosmosTable>1.0.7</MicrosoftAzureCosmosTable>
+    <!--
+      Source: ~
+      NuGet: https://www.nuget.org/packages/Microsoft.Azure.NotificationHubs/
+    -->
+    <MicrosoftAzureNotificationHubsVersion>3.3.0</MicrosoftAzureNotificationHubsVersion>
+    <!--
+      DEPRACATED
+      Source: https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/servicebus/Microsoft.Azure.ServiceBus
+      NuGet: https://www.nuget.org/packages/Microsoft.Azure.ServiceBus/
+    -->
+    <MicrosoftAzureServiceBusVersion>5.1.3</MicrosoftAzureServiceBusVersion>
+    <!--
+      Source: https://github.com/dotnet/aspnetcore/tree/main/src/Identity/Extensions.Stores
+      NuGet: https://www.nuget.org/packages/Microsoft.Extensions.Identity.Stores/
+    -->
+    <MicrosoftExtensionsIdentityStoresVersion>5.0.9</MicrosoftExtensionsIdentityStoresVersion>
+    <!--
+      Source: https://github.com/quartznet/quartznet
+      NuGet: https://www.nuget.org/packages/Quartz/
+    -->
+    <QuartzVersion>3.1.0</QuartzVersion>
+    <!--
+      Source: https://github.com/serilog/serilog-aspnetcore
+      NuGet: https://www.nuget.org/packages/Serilog.AspNetCore/
+    -->
+    <SerilogAspNetCoreVersion>3.4.0</SerilogAspNetCoreVersion>
+    <!--
+      Source: https://github.com/serilog/serilog-extensions-logging
+      NuGet: https://www.nuget.org/packages/Serilog.Extensions.Logging/
+    -->
+    <SerilogExtensionsLoggingVersion>3.0.1</SerilogExtensionsLoggingVersion>
+    <!--
+      Source: https://github.com/serilog/serilog-extensions-logging-file
+      NuGet: https://www.nuget.org/packages/Serilog.Extensions.Logging.File/
+    -->
+    <SerilogExtensionsLoggingFileVersion>2.0.0</SerilogExtensionsLoggingFileVersion>
+    <!--
+      Source: https://github.com/getsentry/sentry-dotnet
+      NuGet: https://www.nuget.org/packages/Sentry.Serilog/
+    -->
+    <SentrySerilogVersion>2.1.5</SentrySerilogVersion>
+    <!--
+      Source: https://github.com/IdentityServer/IdentityServer4
+      NuGet: https://www.nuget.org/packages/IdentityServer4/
+    -->
+    <IdentityServer4Version>4.0.4</IdentityServer4Version>
+    <!--
+      Source: https://github.com/JamesNK/Newtonsoft.Json
+      NuGet: https://www.nuget.org/packages/Newtonsoft.Json/
+    -->
+    <NewtonsoftJsonVersion>12.0.3</NewtonsoftJsonVersion>
+    <!--
+      Source: https://github.com/mahdighorbanpour/serilog-sinks-azurecosmosdb
+      NuGet: https://www.nuget.org/packages/Serilog.Sinks.AzureCosmosDB/
+    -->
+    <SerilogSinksAzureCosmosDbVersion>1.0.0</SerilogSinksAzureCosmosDbVersion>
+    <!--
+      Source: https://github.com/IonxSolutions/serilog-sinks-syslog
+      NuGet: https://www.nuget.org/packages/Serilog.Sinks.SyslogMessages/
+    -->
+    <SerilogSinksSyslogMessagesVersion>1.0.5</SerilogSinksSyslogMessagesVersion>
+    <!--
+      Source: https://github.com/stefanprodan/AspNetCoreRateLimit
+      NuGet: https://www.nuget.org/packages/AspNetCoreRateLimit/
+    -->
+    <AspNetCoreRateLimitVersion>2.1.0</AspNetCoreRateLimitVersion>
+    <!--
+      Source: https://github.com/braintree/braintree_dotnet
+      NuGet: https://www.nuget.org/packages/Braintree/
+    -->
+    <BraintreeVersion>4.18.0</BraintreeVersion>
+    <!--
+      Source: https://github.com/stripe/stripe-dotnet.git
+      NuGet: https://www.nuget.org/packages/Stripe.net/
+    -->
+    <StripeNetVersion>37.26.0</StripeNetVersion>
+    <!--
+      Source: https://github.com/brucedog/U2F_Core
+      NuGet: https://www.nuget.org/packages/U2F.Core/
+    -->
+    <U2FCoreVersion>1.0.4</U2FCoreVersion>
+    <!--
+      Source: https://github.com/kspearrin/Otp.NET
+      NuGet: https://www.nuget.org/packages/Otp.NET/
+    -->
+    <OtpNetVersion>1.2.2</OtpNetVersion>
+    <!--
+      Source: https://github.com/Yubico/yubico-dotnet-client
+      NuGet: https://www.nuget.org/packages/YubicoDotNetClient/
+    -->
+    <YubicoDotNetClientVersion>1.2.0</YubicoDotNetClientVersion>
+    <!--
+      Source: 
+      NuGet: https://www.nuget.org/packages/Microsoft.Extensions.Caching.Redis/
+    -->
+    <MicrosoftExtensionsCachingRedis>2.2.0</MicrosoftExtensionsCachingRedis>
+    <!--
+      Source: https://github.com/dotnet/Scaffolding/tree/main/src/Scaffolding/VS.Web.CG.Design
+      NuGet: https://www.nuget.org/packages/Microsoft.VisualStudio.Web.CodeGeneration.Design/
+    -->
+    <MicrosoftVisualStudioWebCodeGenerationDesignVersion>5.0.2</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
+    <!--
+      Source: https://github.com/newrelic/newrelic-dotnet-agent
+      NuGet: https://www.nuget.org/packages/NewRelic.Agent/
+    -->
+    <NewRelicAgentVersion>8.41.0</NewRelicAgentVersion>
+    <!--
+      Source: https://github.com/Azure/azure-cosmos-dotnet-v3/tree/master/Microsoft.Azure.Cosmos
+      NuGet: https://www.nuget.org/packages/Microsoft.Azure.Cosmos/
+    -->
+    <MicrosoftAzureCosmosVersion>3.21.0</MicrosoftAzureCosmosVersion>
+    <!--
+      Source: https://github.com/domaindrivendev/Swashbuckle.AspNetCore
+      NuGet: https://www.nuget.org/packages/Swashbuckle.AspNetCore/
+    -->
+    <SwashbuckleAspNetCoreVersion>6.2.3</SwashbuckleAspNetCoreVersion>
+    <!--
+      Source: https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/eventgrid/Azure.Messaging.EventGrid
+      NuGet: https://www.nuget.org/packages/Azure.Messaging.EventGrid/
+    -->
+    <AzureMessagingEventGridVersion>4.7.0</AzureMessagingEventGridVersion>
+    <!--
+      Source: https://github.com/AngleSharp/AngleSharp
+      NuGet: https://www.nuget.org/packages/AngleSharp/
+    -->
+    <AngleSharpVersion>0.14.0</AngleSharpVersion>
+    <!--
+      Source: https://github.com/DapperLib/Dapper
+      NuGet: https://www.nuget.org/packages/Dapper/
+    -->
+    <DapperVersion>2.0.123</DapperVersion>
+    <!--
+      Move to Microsoft.Data.SqlClient?
+      Source: ~
+      NuGet: https://www.nuget.org/packages/System.Data.SqlClient/
+    -->
+    <SystemDataSqlClientVersion>4.8.3</SystemDataSqlClientVersion>
+    <!--
+      Source: https://github.com/AutoMapper/AutoMapper.Extensions.Microsoft.DependencyInjection
+      NuGet: https://www.nuget.org/packages/AutoMapper.Extensions.Microsoft.DependencyInjection/
+    -->
+    <AutoMapperExtensionsMicrosoftDependencyInjection>8.0.1</AutoMapperExtensionsMicrosoftDependencyInjection>
+    <!--
+      Source: https://github.com/linq2db/linq2db.EntityFrameworkCore
+      NuGet: https://www.nuget.org/packages/linq2db.EntityFrameworkCore/
+    -->
+    <Linq2DbEntityFrameworkCore>5.2.1</Linq2DbEntityFrameworkCore>
+    <!--
+      Source: https://github.com/npgsql/efcore.pg
+      NuGet: https://www.nuget.org/packages/Npgsql.EntityFrameworkCore.PostgreSQL/
+    -->
+    <NpgSqlEntityFrameworkCorePostgreSql>5.0.2</NpgSqlEntityFrameworkCorePostgreSql>
+    <!--
+      Source: https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql
+      NuGet: https://www.nuget.org/packages/Pomelo.EntityFrameworkCore.MySql/
+    -->
+    <PomeloSqlEntityFrameworkCoreMySql>5.0.3</PomeloSqlEntityFrameworkCoreMySql>
+    
+  </PropertyGroup>
+
 </Project>
