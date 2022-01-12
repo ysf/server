@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Bit.Admin.Models;
 using Bit.Core;
-using Bit.Core.Models.Table;
+using Bit.Core.Entities;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
@@ -389,12 +389,12 @@ namespace Bit.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> TaxRateAddEdit(TaxRateAddEditModel model) 
+        public async Task<IActionResult> TaxRateAddEdit(TaxRateAddEditModel model)
         {
             var existingRateCheck = await _taxRateRepository.GetByLocationAsync(new TaxRate() { Country = model.Country, PostalCode = model.PostalCode });
-            if (existingRateCheck.Any()) 
+            if (existingRateCheck.Any())
             {
-               ModelState.AddModelError(nameof(model.PostalCode), "A tax rate already exists for this Country/Postal Code combination.");
+                ModelState.AddModelError(nameof(model.PostalCode), "A tax rate already exists for this Country/Postal Code combination.");
             }
 
             if (!ModelState.IsValid)
@@ -423,7 +423,7 @@ namespace Bit.Admin.Controllers
             return RedirectToAction("TaxRate");
         }
 
-        public async Task<IActionResult> TaxRateArchive(string stripeTaxRateId) 
+        public async Task<IActionResult> TaxRateArchive(string stripeTaxRateId)
         {
             if (!string.IsNullOrWhiteSpace(stripeTaxRateId))
             {

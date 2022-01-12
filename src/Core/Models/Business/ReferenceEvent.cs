@@ -1,4 +1,5 @@
 ﻿using System;
+using Bit.Core.Entities;
 using Bit.Core.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -24,7 +25,7 @@ namespace Bit.Core.Models.Business
 
         [JsonConverter(typeof(StringEnumConverter))]
         public ReferenceEventType Type { get; set; }
-        
+
         [JsonConverter(typeof(StringEnumConverter))]
         public ReferenceEventSource Source { get; set; }
 
