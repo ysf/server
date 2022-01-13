@@ -20,7 +20,7 @@ namespace Bit.Icons.Test.Services
         [InlineSutAutoData("bofa.com")]
         public async Task GetIconAsync_Success(string domain, SutProvider<IconFetchingService> sutProvider)
         {
-            SetHttpClientFactory(sutProvider);
+            sutProvider = SetHttpClientFactory(sutProvider);
 
             var result = await sutProvider.Sut.GetIconAsync(domain);
 
@@ -34,17 +34,18 @@ namespace Bit.Icons.Test.Services
         [InlineSutAutoData("localhost")]
         public async Task GetIconAsync_ReturnsNull(string domain, SutProvider<IconFetchingService> sutProvider)
         {
-            SetHttpClientFactory(sutProvider);
+            sutProvider = SetHttpClientFactory(sutProvider);
 
             var result = await sutProvider.Sut.GetIconAsync(domain);
 
             Assert.Null(result);
         }
 
-        private static void SetHttpClientFactory(SutProvider<IconFetchingService> sutProvider)
+        private static SutProvider<IconFetchingService> SetHttpClientFactory(SutProvider<IconFetchingService> sutProvider)
         {
             var httpClientFactory = Substitute.For<IHttpClientFactory>();
-            httpClientFactory.CreateClient()
+            httpClientFactory
+                .CreateClient("Icons")
                 .Returns(new HttpClient(new HttpClientHandler
                 {
                     AllowAutoRedirect = false,
@@ -56,6 +57,7 @@ namespace Bit.Icons.Test.Services
                 });
 
             sutProvider.SetDependency(httpClientFactory);
+            return sutProvider.Create();
         }
     }
 }
