@@ -14,59 +14,53 @@ namespace Bit.Icons.Services
 {
     public class IconFetchingService : IIconFetchingService
     {
-        private readonly HashSet<string> _iconRels =
+        private static readonly HashSet<string> _iconRels =
             new HashSet<string> { "icon", "apple-touch-icon", "shortcut icon" };
-        private readonly HashSet<string> _blacklistedRels =
+        private static readonly HashSet<string> _blacklistedRels =
             new HashSet<string> { "preload", "image_src", "preconnect", "canonical", "alternate", "stylesheet" };
-        private readonly HashSet<string> _iconExtensions =
+        private static readonly HashSet<string> _iconExtensions =
             new HashSet<string> { ".ico", ".png", ".jpg", ".jpeg" };
 
-        private readonly string _pngMediaType = "image/png";
-        private readonly byte[] _pngHeader = new byte[] { 137, 80, 78, 71 };
-        private readonly byte[] _webpHeader = Encoding.UTF8.GetBytes("RIFF");
+        private static readonly string _pngMediaType = "image/png";
+        private static ReadOnlySpan<byte> PngHeader => new byte[4] { 137, (byte)'P', (byte)'N', (byte)'G' };
+        private static ReadOnlySpan<byte> WebPHeader => new byte[4] { (byte)'R', (byte)'I', (byte)'F', (byte)'F' };
 
-        private readonly string _icoMediaType = "image/x-icon";
-        private readonly string _icoAltMediaType = "image/vnd.microsoft.icon";
-        private readonly byte[] _icoHeader = new byte[] { 00, 00, 01, 00 };
+        private static readonly string _icoMediaType = "image/x-icon";
+        private static readonly string _icoAltMediaType = "image/vnd.microsoft.icon";
 
-        private readonly string _jpegMediaType = "image/jpeg";
-        private readonly byte[] _jpegHeader = new byte[] { 255, 216, 255 };
+        private static ReadOnlySpan<byte> IcoHeader => new byte[4] { 00, 00, 01, 00 };
 
-        private readonly HashSet<string> _allowedMediaTypes;
+        private static readonly string _jpegMediaType = "image/jpeg";
+        private static ReadOnlySpan<byte> JpegHeader => new byte[3] { 255, 216, 255 };
+
+        private static readonly HashSet<string> _allowedMediaTypes = new(4)
+        {
+            _pngMediaType,
+            _icoMediaType,
+            _icoAltMediaType,
+            _jpegMediaType,
+        };
+
         private readonly HttpClient _httpClient;
         private readonly ILogger<IIconFetchingService> _logger;
 
-        public IconFetchingService(ILogger<IIconFetchingService> logger)
+        public IconFetchingService(IHttpClientFactory httpClientFactory, ILogger<IIconFetchingService> logger)
         {
             _logger = logger;
-            _allowedMediaTypes = new HashSet<string>
-            {
-                _pngMediaType,
-                _icoMediaType,
-                _icoAltMediaType,
-                _jpegMediaType
-            };
-
-            _httpClient = new HttpClient(new HttpClientHandler
-            {
-                AllowAutoRedirect = false,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-            });
-            _httpClient.Timeout = TimeSpan.FromSeconds(20);
-            _httpClient.MaxResponseContentBufferSize = 5000000; // 5 MB
+            _httpClient = httpClientFactory.CreateClient("Icons");
         }
 
         public async Task<IconResult> GetIconAsync(string domain)
         {
             if (IPAddress.TryParse(domain, out _))
             {
-                _logger.LogWarning("IP address: {0}.", domain);
+                Log.IPAddress(_logger, domain);
                 return null;
             }
 
             if (!Uri.TryCreate($"https://{domain}", UriKind.Absolute, out var parsedHttpsUri))
             {
-                _logger.LogWarning("Bad domain: {0}.", domain);
+                Log.BadDomain(_logger, domain);
                 return null;
             }
 
@@ -101,8 +95,7 @@ namespace Bit.Icons.Services
 
             if (response?.Content == null || !response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Couldn't load a website for {0}: {1}.", domain,
-                    response?.StatusCode.ToString() ?? "null");
+                Log.LoadFailed(_logger, domain, response?.StatusCode.ToString() ?? "null");
                 Cleanup(response);
                 return null;
             }
@@ -115,7 +108,7 @@ namespace Bit.Icons.Services
                 uri = response.RequestMessage.RequestUri;
                 if (document.DocumentElement == null)
                 {
-                    _logger.LogWarning("No DocumentElement for {0}.", domain);
+                    Log.NoDocumentElement(_logger, domain);
                     return null;
                 }
 
@@ -216,7 +209,7 @@ namespace Bit.Icons.Services
                     }
                     else
                     {
-                        _logger.LogWarning("No favicon.ico found for {0}.", uri.Host);
+                        Log.NoFavicon(_logger, uri.Host);
                         return null;
                     }
                 }
@@ -237,18 +230,19 @@ namespace Bit.Icons.Services
 
                 var format = response.Content.Headers?.ContentType?.MediaType;
                 var bytes = await response.Content.ReadAsByteArrayAsync();
+                
                 response.Content.Dispose();
                 if (format == null || !_allowedMediaTypes.Contains(format))
                 {
-                    if (HeaderMatch(bytes, _icoHeader))
+                    if (HeaderMatch(bytes, IcoHeader))
                     {
                         format = _icoMediaType;
                     }
-                    else if (HeaderMatch(bytes, _pngHeader) || HeaderMatch(bytes, _webpHeader))
+                    else if (HeaderMatch(bytes, PngHeader) || HeaderMatch(bytes, WebPHeader))
                     {
                         format = _pngMediaType;
                     }
-                    else if (HeaderMatch(bytes, _jpegHeader))
+                    else if (HeaderMatch(bytes, JpegHeader))
                     {
                         format = _jpegMediaType;
                     }
@@ -391,9 +385,9 @@ namespace Bit.Icons.Services
             return null;
         }
 
-        private bool HeaderMatch(byte[] imageBytes, byte[] header)
+        private bool HeaderMatch(ReadOnlySpan<byte> imageBytes, ReadOnlySpan<byte> header)
         {
-            return imageBytes.Length >= header.Length && header.SequenceEqual(imageBytes.Take(header.Length));
+            return imageBytes.Length >= header.Length && header.SequenceEqual(imageBytes[..header.Length]);
         }
 
         private Uri ResolveUri(string baseUrl, params string[] paths)
@@ -452,6 +446,44 @@ namespace Bit.Icons.Services
                 192 => bytes[1] == 168,
                 _ => false,
             };
+        }
+
+        private static class Log
+        {
+            private static readonly Action<ILogger, string, Exception> _ipAddress = LoggerMessage.Define<string>(LogLevel.Warning,
+                new EventId(1, nameof(IPAddress)),
+                "IP address: {IPAddress}.");
+
+            private static readonly Action<ILogger, string, Exception> _badDomain = LoggerMessage.Define<string>(LogLevel.Warning,
+                new EventId(2, nameof(BadDomain)),
+                "Bad domain: {Domain}.");
+
+            public static Action<ILogger, string, string, Exception> _loadFailed = LoggerMessage.Define<string, string>(LogLevel.Warning,
+                new EventId(3, nameof(LoadFailed)),
+                "Couldn't load a website for {Domain}: {StatusCode}.");
+
+            private static Action<ILogger, string, Exception> _noDocumentElement = LoggerMessage.Define<string>(LogLevel.Warning,
+                new EventId(4, nameof(NoDocumentElement)),
+                "No DocumentElement for {Domain}.");
+
+            private static readonly Action<ILogger, string, Exception> _noFavicon = LoggerMessage.Define<string>(LogLevel.Warning,
+                new EventId(5, nameof(NoFavicon)),
+                "No favicon.ico found for {Host}.");
+
+            public static void IPAddress(ILogger logger, string ipAddress)
+                => _ipAddress(logger, ipAddress, null);
+
+            public static void BadDomain(ILogger logger, string domain)
+                => _badDomain(logger, domain, null);
+
+            public static void LoadFailed(ILogger logger, string domain, string statusCode)
+                => _loadFailed(logger, domain, statusCode, null);
+
+            public static void NoDocumentElement(ILogger logger, string domain)
+                => _noDocumentElement(logger, domain, null);
+
+            public static void NoFavicon(ILogger logger, string host)
+                => _noFavicon(logger, host, null);
         }
     }
 }

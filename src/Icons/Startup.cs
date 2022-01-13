@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.Net;
+using System.Net.Http;
 using Bit.Core.Settings;
 using Bit.Core.Utilities;
 using Bit.Icons.Services;
@@ -44,6 +46,21 @@ namespace Bit.Icons
             // Services
             services.AddSingleton<IDomainMappingService, DomainMappingService>();
             services.AddSingleton<IIconFetchingService, IconFetchingService>();
+
+            services.AddHttpClient()
+                .AddHttpClient("Icons", c =>
+                {
+                    c.Timeout = TimeSpan.FromSeconds(20);
+                    c.MaxResponseContentBufferSize = 5000000;
+                })
+                    .ConfigurePrimaryHttpMessageHandler(() =>
+                    {
+                        return new HttpClientHandler
+                        {
+                            AllowAutoRedirect = false,
+                            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                        };
+                    });
 
             // Mvc
             services.AddMvc();
