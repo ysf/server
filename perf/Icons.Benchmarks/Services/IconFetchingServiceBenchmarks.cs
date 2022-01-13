@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Bit.Icons.Models;
@@ -20,10 +17,10 @@ namespace Bit.Icons.Benchmarks.Services
         static IconFetchingServiceBenchmarks()
         {
             var httpClient = new HttpClient(new HttpClientHandler
-                {
-                    AllowAutoRedirect = false,
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                })
+            {
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+            })
             {
                 Timeout = TimeSpan.FromSeconds(20),
                 MaxResponseContentBufferSize = 5000000,
