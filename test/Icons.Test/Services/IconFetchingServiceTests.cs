@@ -1,8 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Bit.Icons.Services;
+using Bit.Test.Common.AutoFixture;
+using Bit.Test.Common.AutoFixture.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using Xunit;
 
 namespace Bit.Icons.Test.Services
@@ -10,44 +16,49 @@ namespace Bit.Icons.Test.Services
     public class IconFetchingServiceTests
     {
         [Theory]
-        [InlineData("www.google.com")] // https site
-        [InlineData("neverssl.com")] // http site
-        [InlineData("ameritrade.com")]
-        [InlineData("icloud.com")]
-        [InlineData("bofa.com")]
-        public async Task GetIconAsync_Success(string domain)
+        [InlineSutAutoData("www.google.com")] // https site
+        [InlineSutAutoData("neverssl.com")] // http site
+        [InlineSutAutoData("ameritrade.com")]
+        [InlineSutAutoData("icloud.com")]
+        [InlineSutAutoData("bofa.com")]
+        public async Task GetIconAsync_Success(string domain, SutProvider<IconFetchingService> sutProvider)
         {
-            var sut = new IconFetchingService(GetLogger());
-            var result = await sut.GetIconAsync(domain);
+            SetHttpClientFactory(sutProvider);
+
+            var result = await sutProvider.Sut.GetIconAsync(domain);
 
             Assert.NotNull(result);
             Assert.NotNull(result.Icon);
         }
 
         [Theory]
-        [InlineData("1.1.1.1")]
-        [InlineData("")]
-        [InlineData("localhost")]
-        public async Task GetIconAsync_ReturnsNull(string domain)
+        [InlineSutAutoData("1.1.1.1")]
+        [InlineSutAutoData("")]
+        [InlineSutAutoData("localhost")]
+        public async Task GetIconAsync_ReturnsNull(string domain, SutProvider<IconFetchingService> sutProvider)
         {
-            var sut = new IconFetchingService(GetLogger());
-            var result = await sut.GetIconAsync(domain);
+            SetHttpClientFactory(sutProvider);
+
+            var result = await sutProvider.Sut.GetIconAsync(domain);
 
             Assert.Null(result);
         }
 
-        private static ILogger<IconFetchingService> GetLogger()
+        private static void SetHttpClientFactory(SutProvider<IconFetchingService> sutProvider)
         {
-            var services = new ServiceCollection();
-            services.AddLogging(b =>
-            {
-                b.ClearProviders();
-                b.AddDebug();
-            });
+            var httpClientFactory = Substitute.For<IHttpClientFactory>();
+            httpClientFactory.CreateClient()
+                .Returns(new HttpClient(new HttpClientHandler
+                {
+                    AllowAutoRedirect = false,
+                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                })
+                {
+                    Timeout = TimeSpan.FromSeconds(20),
+                    MaxResponseContentBufferSize = 5_000_000,
+                });
 
-            var provider = services.BuildServiceProvider();
-
-            return provider.GetRequiredService<ILogger<IconFetchingService>>();
+            sutProvider.SetDependency(httpClientFactory);
         }
     }
 }
