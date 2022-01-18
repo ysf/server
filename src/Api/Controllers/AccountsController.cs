@@ -12,9 +12,7 @@ using Bit.Core.Enums;
 using Bit.Core.Enums.Provider;
 using Bit.Core.Exceptions;
 using Bit.Core.Models.Api.Request.Accounts;
-using Bit.Core.Models.Api.Response.Accounts;
 using Bit.Core.Models.Business;
-using Bit.Core.Models.Data;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
 using Bit.Core.Settings;
@@ -35,7 +33,6 @@ namespace Bit.Api.Controllers
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IProviderUserRepository _providerUserRepository;
         private readonly IPaymentService _paymentService;
-        private readonly IUserRepository _userRepository;
         private readonly IUserService _userService;
         private readonly ISendRepository _sendRepository;
         private readonly ISendService _sendService;
@@ -48,7 +45,6 @@ namespace Bit.Api.Controllers
             IOrganizationUserRepository organizationUserRepository,
             IProviderUserRepository providerUserRepository,
             IPaymentService paymentService,
-            IUserRepository userRepository,
             IUserService userService,
             ISendRepository sendRepository,
             ISendService sendService)
@@ -60,54 +56,10 @@ namespace Bit.Api.Controllers
             _organizationUserRepository = organizationUserRepository;
             _providerUserRepository = providerUserRepository;
             _paymentService = paymentService;
-            _userRepository = userRepository;
             _userService = userService;
             _sendRepository = sendRepository;
             _sendService = sendService;
         }
-
-        #region DEPRECATED (Moved to Identity Service)
-
-        [Obsolete("2022-01-12 Moved to Identity, left for backwards compatability with older clients")]
-        [HttpPost("prelogin")]
-        [AllowAnonymous]
-        public async Task<PreloginResponseModel> PostPrelogin([FromBody] PreloginRequestModel model)
-        {
-            var kdfInformation = await _userRepository.GetKdfInformationByEmailAsync(model.Email);
-            if (kdfInformation == null)
-            {
-                kdfInformation = new UserKdfInformation
-                {
-                    Kdf = KdfType.PBKDF2_SHA256,
-                    KdfIterations = 100000,
-                };
-            }
-            return new PreloginResponseModel(kdfInformation);
-        }
-
-        [Obsolete("2022-01-12 Moved to Identity, left for backwards compatability with older clients")]
-        [HttpPost("register")]
-        [AllowAnonymous]
-        [CaptchaProtected]
-        public async Task PostRegister([FromBody] RegisterRequestModel model)
-        {
-            var result = await _userService.RegisterUserAsync(model.ToUser(), model.MasterPasswordHash,
-                model.Token, model.OrganizationUserId);
-            if (result.Succeeded)
-            {
-                return;
-            }
-
-            foreach (var error in result.Errors.Where(e => e.Code != "DuplicateUserName"))
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-
-            await Task.Delay(2000);
-            throw new BadRequestException(ModelState);
-        }
-
-        #endregion
 
         [HttpPost("password-hint")]
         [AllowAnonymous]
