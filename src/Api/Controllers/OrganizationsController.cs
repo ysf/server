@@ -281,11 +281,11 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }
 
-            var result = await _organizationService.UpgradePlanAsync(orgIdGuid, model.ToOrganizationUpgrade());
+            var (isSuccess, paymentIntentClientSecret) = await _organizationService.UpgradePlanAsync(orgIdGuid, model.ToOrganizationUpgrade());
             return new PaymentResponseModel
             {
-                Success = result.Item1,
-                PaymentIntentClientSecret = result.Item2
+                Success = isSuccess,
+                PaymentIntentClientSecret = paymentIntentClientSecret
             };
         }
 

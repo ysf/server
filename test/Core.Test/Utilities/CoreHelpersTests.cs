@@ -18,10 +18,7 @@ namespace Bit.Core.Test.Utilities
 {
     public class CoreHelpersTests
     {
-        public static IEnumerable<object[]> _epochTestCases = new[]
-        {
-            new object[] {new DateTime(2020, 12, 30, 11, 49, 12, DateTimeKind.Utc), 1609328952000L},
-        };
+        
 
         [Fact]
         public void GenerateComb_Success()
@@ -100,9 +97,15 @@ namespace Bit.Core.Test.Utilities
             Assert.Equal(output, sanitizedInput);
         }
 
-        // TODO: Add more tests
+        public static IEnumerable<object[]> EpochMillisecondsTestCases = new[]
+        {
+            new object[] { new DateTime(2020, 12, 30, 11, 49, 12, 00, DateTimeKind.Utc), 1609328952000L },
+            new object[] { new DateTime(1970, 01, 01, 00, 00, 00, 01, DateTimeKind.Utc), 1 },
+            new object[] { new DateTime(1970, 01, 01, 00, 00, 01, 00, DateTimeKind.Utc), 1000 },
+        };
+
         [Theory]
-        [MemberData(nameof(_epochTestCases))]
+        [MemberData(nameof(EpochMillisecondsTestCases))]
         public void ToEpocMilliseconds_Success(DateTime date, long milliseconds)
         {
             // Act & Assert
@@ -110,11 +113,33 @@ namespace Bit.Core.Test.Utilities
         }
 
         [Theory]
-        [MemberData(nameof(_epochTestCases))]
+        [MemberData(nameof(EpochMillisecondsTestCases))]
         public void FromEpocMilliseconds(DateTime date, long milliseconds)
         {
             // Act & Assert
             Assert.Equal(date, CoreHelpers.FromEpocMilliseconds(milliseconds));
+        }
+
+        public static IEnumerable<object[]> EpochSecondsTestCases = new[]
+        {
+            new object[] { new DateTime(1970, 01, 01, 00, 00, 01, DateTimeKind.Utc), 1 },
+            new object[] { new DateTime(1970, 01, 02, 00, 00, 00, DateTimeKind.Utc), 86400 }
+        };
+
+        [Theory]
+        [MemberData(nameof(EpochSecondsTestCases))]
+        public void ToEpocSeconds_Success(DateTime date, long seconds)
+        {
+            // Act & Assert
+            Assert.Equal(seconds, CoreHelpers.ToEpocSeconds(date));
+        }
+
+        [Theory]
+        [MemberData(nameof(EpochSecondsTestCases))]
+        public void FromEpocSeconds(DateTime date, long seconds)
+        {
+            // Act & Assert
+            Assert.Equal(date, CoreHelpers.FromEpocSeconds(seconds));
         }
 
         [Fact]
@@ -356,12 +381,22 @@ namespace Bit.Core.Test.Utilities
         [InlineData("hi@email.com", "hi@email.com")] // Short email with no room to obfuscate
         [InlineData("name@email.com", "na**@email.com")] // Can obfuscate
         [InlineData("reallylongnamethatnooneshouldhave@email", "re*******************************@email")] // Really long email and no .com, .net, etc
+        [InlineData("1@email.com", "1@email.com")] // Single letter username part
         [InlineData("name@", "name@")] // @ symbol but no domain
         [InlineData("", "")] // Empty string
         [InlineData(null, null)] // null
         public void ObfuscateEmail_Success(string input, string expected)
         {
             Assert.Equal(expected, CoreHelpers.ObfuscateEmail(input));
+        }
+
+        [Theory]
+        [InlineData("hello", "hello", true)]
+        [InlineData("hello1", "hello2", false)]
+        [InlineData("hello", "hello_with_more", false)]
+        public void FixedTimeEquals_Success(string input1, string input2, bool expected)
+        {
+            Assert.Equal(expected, CoreHelpers.FixedTimeEquals(input1, input2));
         }
     }
 }

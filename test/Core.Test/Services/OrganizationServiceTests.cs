@@ -139,7 +139,7 @@ namespace Bit.Core.Test.Services
         }
 
         [Theory, CustomAutoData(typeof(SutProviderCustomization))]
-        public async Task UpgradePlan_OrganizationIsNull_Throws(Guid organizationId, OrganizationUpgrade upgrade,
+        public async Task UpgradePlanAsync_OrganizationIsNull_Throws(Guid organizationId, OrganizationUpgrade upgrade,
                 SutProvider<OrganizationService> sutProvider)
         {
             sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(organizationId).Returns(Task.FromResult<Organization>(null));
@@ -148,7 +148,7 @@ namespace Bit.Core.Test.Services
         }
 
         [Theory, CustomAutoData(typeof(SutProviderCustomization))]
-        public async Task UpgradePlan_GatewayCustomIdIsNull_Throws(Organization organization, OrganizationUpgrade upgrade,
+        public async Task UpgradePlanAsync_GatewayCustomIdIsNull_Throws(Organization organization, OrganizationUpgrade upgrade,
                 SutProvider<OrganizationService> sutProvider)
         {
             organization.GatewayCustomerId = string.Empty;
@@ -159,7 +159,7 @@ namespace Bit.Core.Test.Services
         }
 
         [Theory, CustomAutoData(typeof(SutProviderCustomization))]
-        public async Task UpgradePlan_AlreadyInPlan_Throws(Organization organization, OrganizationUpgrade upgrade,
+        public async Task UpgradePlanAsync_AlreadyInPlan_Throws(Organization organization, OrganizationUpgrade upgrade,
                 SutProvider<OrganizationService> sutProvider)
         {
             upgrade.Plan = organization.PlanType;
@@ -170,7 +170,7 @@ namespace Bit.Core.Test.Services
         }
 
         [Theory, PaidOrganizationAutoData]
-        public async Task UpgradePlan_UpgradeFromPaidPlan_Throws(Organization organization, OrganizationUpgrade upgrade,
+        public async Task UpgradePlanAsync_UpgradeFromPaidPlan_Throws(Organization organization, OrganizationUpgrade upgrade,
                 SutProvider<OrganizationService> sutProvider)
         {
             sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(organization.Id).Returns(organization);
@@ -181,12 +181,81 @@ namespace Bit.Core.Test.Services
 
         [Theory]
         [FreeOrganizationUpgradeAutoData]
-        public async Task UpgradePlan_Passes(Organization organization, OrganizationUpgrade upgrade,
+        public async Task UpgradePlanAsync_Passes(Organization organization, OrganizationUpgrade upgrade,
                 SutProvider<OrganizationService> sutProvider)
         {
             sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(organization.Id).Returns(organization);
             await sutProvider.Sut.UpgradePlanAsync(organization.Id, upgrade);
             await sutProvider.GetDependency<IOrganizationRepository>().Received(1).ReplaceAsync(organization);
+        }
+
+        [Theory, CustomAutoData(typeof(SutProviderCustomization))]
+        public async Task UpgradePlanAsync_NotExistingPlan_Throws(Organization organization, OrganizationUpgrade upgrade,
+            SutProvider<OrganizationService> sutProvider)
+        {
+            organization.PlanType = (PlanType)byte.MaxValue;
+            sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(organization.Id).Returns(organization);
+            await Assert.ThrowsAsync<BadRequestException>(() =>
+                sutProvider.Sut.UpgradePlanAsync(organization.Id, upgrade));
+        }
+
+        [Theory, CustomAutoData(typeof(SutProviderCustomization))]
+        public async Task UpgradePlanAsync_NewPlanDoesNotExist_Throws(Organization organization, OrganizationUpgrade upgrade,
+            SutProvider<OrganizationService> sutProvider)
+        {
+            upgrade.Plan = (PlanType)byte.MaxValue;
+            sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(organization.Id).Returns(organization);
+            await Assert.ThrowsAsync<BadRequestException>(() => 
+                sutProvider.Sut.UpgradePlanAsync(organization.Id, upgrade));
+        }
+
+        [Theory, CustomAutoData(typeof(SutProviderCustomization))]
+        public async Task UpgradePlanAsync_Downgrade_Throws(Organization organization, OrganizationUpgrade upgrade,
+            SutProvider<OrganizationService> sutProvider)
+        {
+            upgrade.Plan = PlanType.Free;
+            organization.PlanType = PlanType.FamiliesAnnually;
+            sutProvider.GetDependency<IOrganizationRepository>().GetByIdAsync(organization.Id).Returns(organization);
+            await Assert.ThrowsAsync<BadRequestException>(() =>
+                sutProvider.Sut.UpgradePlanAsync(organization.Id, upgrade));
+        }
+
+        [Theory, FreeOrganizationUpgradeAutoData]
+        public async Task UpgradePlanAsync_NotEnoughSeats_Throws(Organization organization, OrganizationUpgrade upgrade,
+            SutProvider<OrganizationService> sutProvider)
+        {
+            upgrade.Plan = PlanType.TeamsAnnually;
+            upgrade.AdditionalSeats = 10;
+            organization.Seats = 100;
+            
+            sutProvider.GetDependency<IOrganizationRepository>()
+                .GetByIdAsync(organization.Id)
+                .Returns(organization);
+            sutProvider.GetDependency<IOrganizationUserRepository>()
+                .GetCountByOrganizationIdAsync(organization.Id)
+                .Returns(100);
+            
+            await Assert.ThrowsAsync<BadRequestException>(() =>
+                sutProvider.Sut.UpgradePlanAsync(organization.Id, upgrade));
+        }
+
+        [Theory, FreeOrganizationUpgradeAutoData]
+        public async Task UpgradePlanAsync_HasEnoughSeats_Passes(Organization organization, OrganizationUpgrade upgrade,
+            SutProvider<OrganizationService> sutProvider)
+        {
+            upgrade.Plan = PlanType.TeamsAnnually;
+            upgrade.AdditionalSeats = 10;
+            organization.Seats = null;
+
+            sutProvider.GetDependency<IOrganizationRepository>()
+                .GetByIdAsync(organization.Id)
+                .Returns(organization);
+            sutProvider.GetDependency<IOrganizationUserRepository>()
+                .GetCountByOrganizationIdAsync(organization.Id)
+                .Returns(5);
+
+            var result = await sutProvider.Sut.UpgradePlanAsync(organization.Id, upgrade);
+            Assert.True(result.IsSuccess);
         }
 
         [Theory]

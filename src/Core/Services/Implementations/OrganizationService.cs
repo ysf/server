@@ -150,7 +150,7 @@ namespace Bit.Core.Services
                 new ReferenceEvent(ReferenceEventType.ReinstateSubscription, organization));
         }
 
-        public async Task<Tuple<bool, string>> UpgradePlanAsync(Guid organizationId, OrganizationUpgrade upgrade)
+        public async Task<(bool IsSuccess, string PaymentIntentClientSecret)> UpgradePlanAsync(Guid organizationId, OrganizationUpgrade upgrade)
         {
             var organization = await GetOrgById(organizationId);
             if (organization == null)
@@ -163,7 +163,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("Your account has no payment method available.");
             }
 
-            var existingPlan = StaticStore.Plans.FirstOrDefault(p => p.Type == organization.PlanType);
+            var existingPlan = StaticStore.GetPlan(organization.PlanType);
             if (existingPlan == null)
             {
                 throw new BadRequestException("Existing plan not found.");
@@ -327,7 +327,7 @@ namespace Bit.Core.Services
                     });
             }
 
-            return new Tuple<bool, string>(success, paymentIntentClientSecret);
+            return (success, paymentIntentClientSecret);
         }
 
         public async Task<string> AdjustStorageAsync(Guid organizationId, short storageAdjustmentGb)
